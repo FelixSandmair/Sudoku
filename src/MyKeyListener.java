@@ -1,15 +1,18 @@
-import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+//KeyListener class that waits for number and notation number input
 public class MyKeyListener implements KeyListener {
 
-    Sudoku mySudoku;
+    private PlayingField playingField;
+    private NumberField numberField;
 
-    MyKeyListener(Sudoku s) {
-        mySudoku = s;
+    MyKeyListener(PlayingField playingField, NumberField numberField) {
+        this.playingField = playingField;
+        this.numberField = numberField;
     }
 
+    @Override
     public void keyTyped(KeyEvent e) {
 
     }
@@ -19,63 +22,48 @@ public class MyKeyListener implements KeyListener {
 
     }
 
+    //numbers and notations get placed if buttons are released
     @Override
     public void keyReleased(KeyEvent e) {
-        System.out.println(e.getKeyCode());
-        if(mySudoku.playingField.selectedField != mySudoku.NOBUTTON) {
-            if(e.getKeyCode() >= 49 && e.getKeyCode() <= 57) {
-                int row = mySudoku.playingField.getRowIndex(mySudoku.playingField.selectedField + 1);
-                int collumn = mySudoku.playingField.getCollumnIndex(mySudoku.playingField.selectedField + 1);
-                if(mySudoku.playingField.buttons[mySudoku.playingField.selectedField].getText().equals("")) {
-                    mySudoku.playingField.counterVec.add(mySudoku.playingField.selectedField);
-                }
-                mySudoku.playingField.fieldRows[row * 9 + collumn] = e.getKeyCode() - 48;
-                mySudoku.playingField.fieldCollumns[collumn * 9 + row] = e.getKeyCode() - 48;
-                mySudoku.playingField.fieldBlocks[mySudoku.playingField.selectedField] = e.getKeyCode() - 48;
-                mySudoku.playingField.buttons[mySudoku.playingField.selectedField].setText("" + (e.getKeyCode() - 48));
-                for(int i = 0; i < 9; i++) {
-                    mySudoku.playingField.buttonLayer[mySudoku.playingField.selectedField * 9 + i].setVisible(false);
-                    mySudoku.numberField.notationButtons[i].setBackground(mySudoku.colors[0]);
-                }
-                mySudoku.repaint();
-                if(mySudoku.playingField.counterVec.size() == 81) {
-                    mySudoku.checkIfWon();
-                }
-            }
-            if(e.getKeyCode() == 127) {
-                if (!mySudoku.playingField.buttons[mySudoku.playingField.selectedField].getText().equals("")) {
-                    mySudoku.playingField.counterVec.remove(mySudoku.playingField.selectedField);
-                    int row = mySudoku.playingField.getRowIndex(mySudoku.playingField.selectedField + 1);
-                    int collumn = mySudoku.playingField.getCollumnIndex(mySudoku.playingField.selectedField + 1);
-                    mySudoku.playingField.fieldRows[row * 9 + collumn] = 0;
-                    mySudoku.playingField.fieldCollumns[collumn * 9 + row] = 0;
-                    mySudoku.playingField.fieldBlocks[mySudoku.playingField.selectedField] = 0;
-                    mySudoku.playingField.buttons[mySudoku.playingField.selectedField].setText("");
-                    for(int i = 0; i < 9; i++) {
-                        mySudoku.playingField.buttonLayer[mySudoku.playingField.selectedField * 9 + i].setVisible(true);
-                        if(!mySudoku.playingField.buttonLayer[mySudoku.playingField.selectedField * 9 + i].getText().equals("")) {
-                            mySudoku.numberField.notationButtons[i].setBackground(mySudoku.colors[3]);
-                        }
-                    }
-                    mySudoku.repaint();
-                }
-            }
-            if(e.getKeyCode() >= 97 && e.getKeyCode() <= 105 && mySudoku.playingField.buttons[mySudoku.playingField.selectedField].getText().equals("")) {
-                if(mySudoku.playingField.buttonLayer[mySudoku.playingField.selectedField * 9 + e.getKeyCode() - 97].getText().equals("")) {
-                    mySudoku.playingField.buttonLayer[mySudoku.playingField.selectedField * 9 + e.getKeyCode() - 97].setText("" + (e.getKeyCode() - 96));
-                    mySudoku.numberField.notationButtons[e.getKeyCode() - 97].setBackground(mySudoku.colors[3]);
-                } else {
-                    mySudoku.playingField.buttonLayer[mySudoku.playingField.selectedField * 9 + e.getKeyCode() - 97].setText("");
-                    mySudoku.numberField.notationButtons[e.getKeyCode() - 97].setBackground(mySudoku.colors[0]);
-                }
-            }
-            if(e.getKeyCode() == 106 && mySudoku.playingField.buttons[mySudoku.playingField.selectedField].getText().equals("")) {
-                for(int i = 0; i < 9; i++) {
-                    mySudoku.playingField.buttonLayer[mySudoku.playingField.selectedField * 9 + i].setText("");
-                    mySudoku.numberField.notationButtons[i].setBackground(mySudoku.colors[0]);
-                }
-            }
+
+        //Keycodes between 49 and 57 is the number row from 1 to , and they are used for placing numbers
+        if (e.getKeyCode() >= 49 && e.getKeyCode() <= 57) {
+            playingField.setButtonNumber(e.getKeyCode() - 48);
+            return;
         }
 
+        //Keycode 127 is from the delete key and is used to remove a number from a field
+        if (e.getKeyCode() == 127) {
+            playingField.deleteNumberFromSelectedCell();
+            return;
+        }
+
+        //Keycodes between 97 and 105 is the numpad of they keyboard which is used to place and remove notation buttons
+        if (e.getKeyCode() >= 97 && e.getKeyCode() <= 105) {
+            playingField.setNotationLayerNumber(e.getKeyCode() - 96);
+            return;
+        }
+
+        //Keycode 106 is the multiply key of the numpad (looks like an x) and deletes all the notes made previously
+        if (e.getKeyCode() == 106) {
+            playingField.deletAllNotesInSelectedCell();
+            return;
+        }
+
+        switch (e.getKeyCode()) {
+            case 37:
+                playingField.moveSelectedCell(-1,0);
+                break;
+            case 38:
+                playingField.moveSelectedCell(0,-1);
+                break;
+            case 39:
+                playingField.moveSelectedCell(1,0);
+                break;
+            case 40:
+                playingField.moveSelectedCell(0,1);
+                break;
+            default:
+        }
     }
 }

@@ -1,19 +1,72 @@
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class SudokuGenerator {
-    public static int EASY = 1;
-    public static int MEDIUM = 2;
-    public static int HARD = 3;
-    int difficulty;
 
+//This class generates a finished sudoku grid and then removes cells to get a solvable Sudoku
+public class SudokuGenerator {
     private int[] grid;
-    SudokuGenerator(int difficulty) {
-        this.difficulty = difficulty;
-        printGrid(generateGrid());
+    private Solver s;
+
+    SudokuGenerator(Difficulty difficulty) {
+        int filledCells = 0;
+        int counter = 0;
+        switch (difficulty) {
+            case EASY -> filledCells = 32;
+            case MEDIUM -> filledCells = 22;
+            case HARD -> filledCells = 21;
+        }
+
+        while(true) {
+            //generate solver with the generated grid and the difficulty setting you want to generate
+            generateGrid();
+            s = new Solver(grid, difficulty);
+
+            //indices that later get shuffled in order to remove cells in random order
+            ArrayList<Integer> indices = new ArrayList<>(81);
+            int removedNumber = 0;
+
+            for (int i = 0; i < 81; i++)
+                indices.add(i);
+
+            Collections.shuffle(indices);
+
+            //removes cells in random order and after removing lets the solver try to solve the puzzle with the missing cells
+            for (int removeIndex : indices) {
+                removedNumber = s.deleteCell(removeIndex);
+                counter++;
+                //if the sudoku is not solvable anymore at the difficulty then you fill the cell again and try to remove the next cell
+                if (!s.solveable()) {
+                    counter--;
+                    s.fillCell(removeIndex, removedNumber);
+                }
+                if(81 - counter == filledCells) {
+                    break;
+                }
+            }
+
+            if(81 - counter == filledCells) {
+                break;
+            } else {
+                counter = 0;
+            }
+        }
     }
 
-    public int[] generateGrid()
+    public int[] getGridBlocks() {
+        return s.getGridBlocks();
+    }
+
+    public int[] getGridRows() {
+        return s.getGridRows();
+    }
+
+    public int[] getGridColumns() {
+        return s.getGridColumns();
+    }
+
+
+    //generates a solved sudoku grid stores it in object variable and returns it (in row representation)
+    private void generateGrid()
     {
         ArrayList<Integer> arr = new ArrayList<Integer>(9);
         grid = new int[81];
@@ -163,19 +216,25 @@ public class SudokuGenerator {
         }
 
         if(!isPerfect(grid)) throw new RuntimeException("ERROR: Imperfect grid generated.");
-
-        return grid;
     }
 
+    //prints grid in the console (grid needs to be in row representation)
     public static void printGrid(int[] grid)
     {
         if(grid.length != 81) throw new IllegalArgumentException("The grid must be a single-dimension grid of length 81");
         for(int i = 0; i < 81; i++)
         {
-            System.out.print("["+grid[i]+"] "+(i%9 == 8?"\n":""));
+            System.out.print("["+(grid[i] != 0 ? grid[i] : " ")+"] "+(i%9 == 8?"\n":""));
+            if(i % 3 == 2 && i % 9 != 8) {
+                System.out.print(" ");
+            }
+            if(i % 27 == 26) {
+                System.out.println();
+            }
         }
     }
 
+    //test if a grid is solved correctly (grid needs to be in row representation)
     public static boolean isPerfect(int[] grid)
     {
         if(grid.length != 81) throw new IllegalArgumentException("The grid must be a single-dimension grid of length 81");
@@ -194,8 +253,14 @@ public class SudokuGenerator {
                 int boxNum = grid[boxStep];
                 registered[boxNum] = true;
             }
-            for(boolean b: registered)
-                if(!b) return false;
+            int counter = 0;
+            for(boolean b: registered) {
+                if (!b) {
+                    System.out.println("no number " + counter + " in box with origin " + boxOrigin);
+                    return false;
+                }
+                counter++;
+            }
         }
 
         //for every row
@@ -210,8 +275,14 @@ public class SudokuGenerator {
                 int rowNum = grid[rowStep];
                 registered[rowNum] = true;
             }
-            for(boolean b: registered)
-                if(!b) return false;
+            int counter = 0;
+            for(boolean b: registered) {
+                if (!b) {
+                    System.out.println("no number " + counter + " in row with origin " + rowOrigin);
+                    return false;
+                }
+                counter++;
+            }
         }
 
         //for every column
@@ -226,8 +297,14 @@ public class SudokuGenerator {
                 int colNum = grid[colStep];
                 registered[colNum] = true;
             }
-            for(boolean b: registered)
-                if(!b) return false;
+            int counter = 0;
+            for(boolean b: registered) {
+                if (!b) {
+                    System.out.println("no number " + counter + " in column with origin " + colOrigin);
+                    return false;
+                }
+                counter++;
+            }
         }
 
         return true;

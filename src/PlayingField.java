@@ -5,204 +5,342 @@ import java.awt.event.MouseListener;
 import java.util.Vector;
 
 public class PlayingField extends JPanel {
-    public static int NOBUTTON = 100;
-    public static String schriftart = "MV Boli";
-    Sudoku s;
-    NumberField numberField;
-    JPanel[] squares = new JPanel[9];
-    JButton[] buttons = new JButton[9 * 9];
-    JLabel[] buttonLayer = new JLabel[81 * 9];
-    int[] fieldBlocks = new int[81];
-    int[] fieldRows = new int[81];
-    int[] fieldCollumns = new int[81];
-    Vector<Integer> counterVec = new Vector<>();
-    int selectedField = NOBUTTON;
+    /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+    private Sudoku s;
+    private NumberField numberField;
+    private JPanel[] blocks = new JPanel[9];
+    private JButton[] buttons = new JButton[9 * 9];
+    private JLabel[] notationLayer = new JLabel[81 * 9];
+    private int[] gridBlocks;
+    private int[] gridRows;
+    private int[] gridColumns;
+    private Vector<Integer> counterVec = new Vector<>();
+    private int selectedCell = Sudoku.NOBUTTON;
 
     PlayingField(Sudoku s) {
         this.s = s;
     }
 
-    public void setup() {
-        setSquares();
-        setButtons();
-        setButtonLayer();
-        setPlayingField(new int[]{0,1,3,7,5,4,9,8,0,7,0,4,3,9,8,1,5,6,5,8,9,6,2,1,4,7,3,2,7,5,1,9,6,3,4,8,4,6,3,5,8,2,9,7,1,9,1,8,3,4,7,2,5,6,8,2,1,5,6,7,4,3,9,6,3,5,8,4,9,2,1,7,7,9,4,1,3,2,8,6,0});
+    //getter functions
+    /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+    public int[] getGridRows() {
+        return gridRows;
     }
 
-    public void setNumberField(NumberField numberField) {
+
+    //Functions used for initial setup
+    /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+    public void setup(int width, int height, NumberField numberField, Difficulty difficulty) {
         this.numberField = numberField;
+
+        //generate sudoku grid of desired difficulty
+        SudokuGenerator sGen = new SudokuGenerator(difficulty);
+        gridBlocks = sGen.getGridBlocks();
+        gridRows = sGen.getGridRows();
+        gridColumns = sGen.getGridColumns();
+
+        gridBlocks[0] = 0;
+        gridRows[0] = 0;
+        gridColumns[0] = 0;
+
+        //setup this panel
+        setSize((height*75)/100, (height*75)/100);
+        setBounds(width/2 - getWidth()/2,30,getWidth(), getHeight());
+        setLayout(new GridLayout(3, 3, 4,4));
+        setBorder(BorderFactory.createLineBorder(s.getColor(4),4));
+        setBackground(s.getColor(4));
+
+        setBlocks();
+        setButtons();
+        setNotationLayer();
     }
 
-    public void setSquares() {
-        this.setLayout(new GridLayout(3, 3, 5,5));
-        for (int i = 0; i < squares.length; ++i) {
-            squares[i] = new JPanel();
-            squares[i].setLayout(new GridLayout(3, 3,1,1));
-            squares[i].setBackground(s.colors[4]);
-            //squares[i].setBorder(BorderFactory.createLineBorder(s.colors[4], 4));
-            this.setBackground(s.colors[4]);
-            this.add(squares[i]);
+    //setups the block panels
+    private void setBlocks() {
+        for (int i = 0; i < blocks.length; ++i) {
+            blocks[i] = new JPanel();
+            blocks[i].setLayout(new GridLayout(3, 3,1,1));
+            blocks[i].setBackground(s.getColor(4));
+            add(blocks[i]);
         }
     }
 
-    public void setButtons() {
+    //setups all cell buttons based on the playing fields start configuration
+    private void setButtons() {
         for (int i = 0; i < 9; ++i) {
             for (int j = 0; j < 9; ++j) {
+                //basic button configuration
                 buttons[i * 9 + j] = new JButton();
                 buttons[i * 9 + j].addActionListener(this::playButtons);
-                buttons[i * 9 + j].setFont(new Font(schriftart, Font.PLAIN, 50));
+                buttons[i * 9 + j].setFont(new Font(Sudoku.FONT, Font.PLAIN, 50));
                 buttons[i * 9 + j].setFocusable(false);
-                buttons[i * 9 + j].setBackground(i % 2 == 0 ? s.colors[0] : s.colors[2]);
-                buttons[i * 9 + j].setForeground(s.colors[1]);
-                buttons[i * 9 + j].setBorder(BorderFactory.createLineBorder(s.colors[4], 1));
+                buttons[i * 9 + j].setBackground(i % 2 == 0 ? s.getColor(0) : s.getColor(2));
+                buttons[i * 9 + j].setForeground(s.getColor(1));
+                buttons[i * 9 + j].setBorder(BorderFactory.createLineBorder(s.getColor(4), 1));
                 buttons[i * 9 + j].setLayout(new GridLayout(3, 3));
-                squares[i].add(buttons[i * 9 + j]);
-            }
-        }
-    }
+                blocks[i].add(buttons[i * 9 + j]);
 
-    public void playButtons(ActionEvent e) {
-        int currentIndex = 0;
-        int currentBlock = 0;
-        for (int i = 0; i < 9; i++) {
-            for(int j = 0; j < 9; j++) {
-                if (e.getSource() == buttons[i*9+j]) {
-                    currentIndex = i*9+j;
-                    currentBlock = i;
-                    break;
+                //set the buttons that contain a number in the start configuration
+                if(gridBlocks[i * 9 + j] != 0) {
+                    buttons[i * 9 + j].setText("" + gridBlocks[i * 9 + j]);
+                    buttons[i * 9 + j].setRolloverEnabled(false);
+                    buttons[i * 9 + j].setForeground(s.getColor(4));
+                    counterVec.add(i * 9 + j);
                 }
             }
         }
-        if (selectedField == currentIndex) {  //Alle button inaktiv setzen
-            buttons[currentIndex].setBackground(currentBlock%2 == 0 ? s.colors[0] : s.colors[2]);
-            for (int i = 0; i < 9; i++) {
-                numberField.notationButtons[i].setBackground(s.colors[0]);
-            }
-            selectedField = NOBUTTON;
-            return;
-        }
-        if (selectedField != NOBUTTON) {
-            buttons[selectedField].setBackground((selectedField/9)%2 == 0 ? s.colors[0] : s.colors[2]);
-            for (int i = 0; i < 9; i++) {
-                numberField.notationButtons[i].setBackground(s.colors[0]);
-            }
-        }
-        selectedField = currentIndex;
-        buttons[currentIndex].setBackground(s.colors[3]);
-        for (int i = 0; i < 9; i++) {
-            if (!buttonLayer[selectedField * 9 + i].getText().equals("")) {
-                numberField.notationButtons[i].setBackground(s.colors[3]);
-            }
-        }
-        this.repaint();
     }
 
-    public void setButtonLayer() {
+    //setups all notationLayer labels
+    private void setNotationLayer() {
         for (int i = 0; i < 81; i++) {
             for (int j = 0; j < 9; j++) {
-                buttonLayer[i * 9 + j] = new JLabel();
-                buttonLayer[i * 9 + j].setFont(new Font(schriftart, Font.BOLD, 20));
-                buttonLayer[i * 9 + j].setForeground(s.colors[1]);
-                buttonLayer[i * 9 + j].setVerticalAlignment(JLabel.CENTER);
-                buttonLayer[i * 9 + j].setHorizontalAlignment(JLabel.CENTER);
-                buttons[i].add(buttonLayer[i * 9 + j]);
+                notationLayer[i * 9 + j] = new JLabel();
+                notationLayer[i * 9 + j].setFont(new Font(Sudoku.FONT, Font.BOLD, 20));
+                notationLayer[i * 9 + j].setForeground(s.getColor(1));
+                notationLayer[i * 9 + j].setVerticalAlignment(JLabel.CENTER);
+                notationLayer[i * 9 + j].setHorizontalAlignment(JLabel.CENTER);
+                buttons[i].add(notationLayer[i * 9 + j]);
             }
         }
     }
 
-    public void setPlayingField(int[] configuration) {
-        fieldBlocks = configuration;
-        int row;
-        int collumn;
-        for (int i = 0; i < configuration.length; ++i) {
-            if (configuration[i] != 0) {
-                row = getRowIndex(i + 1);
-                collumn = getCollumnIndex(i + 1);
-                fieldRows[row * 9 + collumn] = configuration[i];
-                fieldCollumns[collumn * 9 + row] = configuration[i];
-                buttons[i].setText("" + configuration[i]);
-                buttons[i].setRolloverEnabled(false);
-                MouseListener[] listeners = buttons[i].getMouseListeners();
-                buttons[i].setForeground(s.colors[4]);
-                for (MouseListener ml : listeners) {
-                    buttons[i].removeMouseListener(ml);
-                }
-                counterVec.add(i);
+
+    //Action Listeners for Buttons
+    /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+    private void playButtons(ActionEvent e) {
+        //Searches for index of the button that was pressed
+        int currentIndex = 0;
+        for (int i = 0; i < 81; i++) {
+            if (e.getSource() == buttons[i]) {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        //do nothing if cell is already selected
+        if(currentIndex == selectedCell) {
+            return;
+        }
+
+        //Block of previously selected cell
+        int block = selectedCell/9;
+
+        //If there was a cell selected then we need to remove the selection color from this button
+        if (selectedCell != Sudoku.NOBUTTON) {
+            buttons[selectedCell].setBackground(block%2 == 0 ? s.getColor(0) : s.getColor(2));
+            for (int i = 0; i < 9; i++) {
+                numberField.setNotationUnmarked(i);
+            }
+        }
+
+        //We set the color of the newly selected cell and update selectedCell variable
+        selectedCell = currentIndex;
+        buttons[currentIndex].setBackground(s.getColor(3));
+        for (int i = 0; i < 9; i++) {
+            if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
+                numberField.setNotationMarked(i);
+            }
+        }
+        s.repaint();
+    }
+
+
+    //public Interface functions
+    /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+    //inserts Number at selected Field
+    public void setButtonNumber(int number) {
+        //check if there is a cell currently selected
+        if(selectedCell != Sudoku.NOBUTTON && !buttons[selectedCell].getForeground().equals(s.getColor(4))) {
+            int row = Sudoku.getRow(selectedCell);
+            int column = Sudoku.getColumn(selectedCell);
+            int block = selectedCell/9;
+
+            //if the button was empty previously we need to add the cell to the counterVec
+            if(buttons[selectedCell].getText().equals("")) {
+                counterVec.add(selectedCell);
+            }
+
+            //change grid representations and button text
+            gridRows[row * 9 + column] = number;
+            gridColumns[column * 9 + row] = number;
+            gridBlocks[selectedCell] = number;
+            buttons[selectedCell].setText("" + number);
+
+            //set all notes of the cell to not be visible
+            for(int i = 0; i < 9; i++) {
+                notationLayer[selectedCell * 9 + i].setVisible(false);
+                numberField.setNotationUnmarked(i);
+            }
+
+            //delete all notes base on the number inserted
+            /*for(int i = 0; i < 9; i++) {
+                notationLayer[block * 81 + i * 9 + number - 1].setText("");
+                notationLayer[((row / 3) * 27 + (row % 3) * 3 + (i / 3) * 9 + (i % 3)) * 9 + number - 1].setText("");
+                notationLayer[((column / 3) * 9 + (column % 3) + (i / 3) * 27 + (i % 3) * 3) * 9 + number - 1].setText("");
+            }*/
+
+            s.repaint();
+
+            //if the counterVec size gets to 81 that means the sudoku if filled completely and we need to check if
+            if(counterVec.size() == 81) {
+                s.checkIfWon();
             }
         }
     }
 
-    public static int getRowIndex(int blockIndex) {
-        switch (blockIndex % 9) {
-            case 1,2,3: //row 1, 4 or 7
-                if(blockIndex <= 27) {
-                    return 0;
+    public void deleteNumberFromSelectedCell() {
+        //check if there is a cell currently selected and if the there is a number inside
+        if(selectedCell != Sudoku.NOBUTTON && !buttons[selectedCell].getForeground().equals(s.getColor(4))) {
+            if (!buttons[selectedCell].getText().equals("")) {
+
+                //remove this cell from the counterVec and update all grids and the button
+                counterVec.remove(Integer.valueOf(selectedCell));
+                int row = Sudoku.getRow(selectedCell);
+                int column = Sudoku.getColumn(selectedCell);
+                gridRows[row * 9 + column] = 0;
+                gridColumns[column * 9 + row] = 0;
+                gridBlocks[selectedCell] = 0;
+                buttons[selectedCell].setText("");
+
+                //set old notation visible and change color
+                for (int i = 0; i < 9; i++) {
+                    notationLayer[selectedCell * 9 + i].setVisible(true);
+                    if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
+                        numberField.setNotationMarked(i);
+                    }
                 }
-                if(blockIndex <= 54) {
-                    return 3;
-                }
-                return 6;
-            case 4,5,6: //row 2, 5 or 8
-                if(blockIndex <= 27) {
-                    return 1;
-                }
-                if(blockIndex <= 54) {
-                    return 4;
-                }
-                return 7;
-            case 7,8,0: //row 3, 6 or 9
-                if(blockIndex <= 27) {
-                    return 2;
-                }
-                if(blockIndex <= 54) {
-                    return 5;
-                }
-                return 8;
-            default:
-                return 0;
+                s.repaint();
+            }
         }
     }
 
-    public static int getCollumnIndex(int blockIndex) {
-        switch (blockIndex % 3) {
-            case 1: //collumn 1, 4 or 7
-                for (int i = 1; i <= 9; ++i) {
-                    if (blockIndex <= i * 9) {
-                        if (i % 3 == 1) {
-                            return 0;
-                        }
-                        if (i % 3 == 2) {
-                            return 3;
-                        }
-                        return 6;
-                    }
-                }
-            case 2://collumn 2, 5 or 8
-                for (int i = 1; i <= 9; ++i) {
-                    if (blockIndex <= i * 9) {
-                        if (i % 3 == 1) {
-                            return 1;
-                        }
-                        if (i % 3 == 2) {
-                            return 4;
-                        }
-                        return 7;
-                    }
-                }
-            case 0://collumn 3, 6 or 9
-                for (int i = 1; i <= 9; ++i) {
-                    if (blockIndex <= i * 9) {
-                        if (i % 3 == 1) {
-                            return 2;
-                        }
-                        if (i % 3 == 2) {
-                            return 5;
-                        }
-                        return 8;
-                    }
-                }
+    public void setNotationLayerNumber(int number) {
+        //check if there is a cell currently selected
+        if(selectedCell != Sudoku.NOBUTTON && buttons[selectedCell].getText().equals("")) {
+            //if notation of number was not set, set the text to "number"
+            if(notationLayer[selectedCell * 9 + number - 1].getText().equals("")) {
+                notationLayer[selectedCell * 9 + number - 1].setText("" + number);
+                numberField.setNotationMarked(number-1);
+            } else {
+                //else remove the number from the notations
+                notationLayer[selectedCell * 9 + number - 1].setText("");
+                numberField.setNotationUnmarked(number-1);
+            }
         }
-        return 0;
+    }
+
+    public void deletAllNotesInSelectedCell() {
+        //check if there is a cell currently selected
+        if (selectedCell != Sudoku.NOBUTTON && buttons[selectedCell].getText().equals("")) {
+            for(int i = 0; i < 9; i++) {
+                notationLayer[selectedCell * 9 + i].setText("");
+                numberField.setNotationUnmarked(i);
+            }
+        }
+    }
+
+    public void moveSelectedCell(int x, int y) {
+        if(selectedCell != Sudoku.NOBUTTON) {
+            int block = selectedCell/9;
+            int row = Sudoku.getRow(selectedCell);
+            int column = Sudoku.getColumn(selectedCell);
+            row = row + y;
+            column = column + x;
+            if(0 <= row && row <= 8 && 0 <= column && column <= 8) {
+                buttons[selectedCell].setBackground(block%2 == 0 ? s.getColor(0) : s.getColor(2));
+                for (int i = 0; i < 9; i++) {
+                    numberField.setNotationUnmarked(i);
+                }
+                int rowIndex = row * 9 + column;
+                selectedCell = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
+                buttons[selectedCell].setBackground(s.getColor(3));
+                for (int i = 0; i < 9; i++) {
+                    if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
+                        numberField.setNotationMarked(i);
+                    }
+                }
+                s.repaint();
+            }
+        }
+    }
+
+    public void moveLeft() {
+
+    }
+
+    public void moveUp() {
+        if(selectedCell != Sudoku.NOBUTTON) {
+            int block = selectedCell/9;
+            int row = Sudoku.getRow(selectedCell);
+            int column = Sudoku.getColumn(selectedCell);
+            if(column > 0) {
+                buttons[selectedCell].setBackground(block%2 == 0 ? s.getColor(0) : s.getColor(2));
+                for (int i = 0; i < 9; i++) {
+                    numberField.setNotationUnmarked(i);
+                }
+                int rowIndex = row * 9 + column - 1;
+                selectedCell = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
+                buttons[selectedCell].setBackground(s.getColor(3));
+                for (int i = 0; i < 9; i++) {
+                    if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
+                        numberField.setNotationMarked(i);
+                    }
+                }
+                s.repaint();
+            }
+        }
+    }
+
+    public void moveRight() {
+        if(selectedCell != Sudoku.NOBUTTON) {
+            int block = selectedCell/9;
+            int row = Sudoku.getRow(selectedCell);
+            int column = Sudoku.getColumn(selectedCell);
+            if(column > 0) {
+                buttons[selectedCell].setBackground(block%2 == 0 ? s.getColor(0) : s.getColor(2));
+                for (int i = 0; i < 9; i++) {
+                    numberField.setNotationUnmarked(i);
+                }
+                int rowIndex = row * 9 + column - 1;
+                selectedCell = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
+                buttons[selectedCell].setBackground(s.getColor(3));
+                for (int i = 0; i < 9; i++) {
+                    if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
+                        numberField.setNotationMarked(i);
+                    }
+                }
+                s.repaint();
+            }
+        }
+    }
+
+    public void moveDown() {
+        if(selectedCell != Sudoku.NOBUTTON) {
+            int block = selectedCell/9;
+            int row = Sudoku.getRow(selectedCell);
+            int column = Sudoku.getColumn(selectedCell);
+            if(column > 0) {
+                buttons[selectedCell].setBackground(block%2 == 0 ? s.getColor(0) : s.getColor(2));
+                for (int i = 0; i < 9; i++) {
+                    numberField.setNotationUnmarked(i);
+                }
+                int rowIndex = row * 9 + column - 1;
+                selectedCell = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
+                buttons[selectedCell].setBackground(s.getColor(3));
+                for (int i = 0; i < 9; i++) {
+                    if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
+                        numberField.setNotationMarked(i);
+                    }
+                }
+                s.repaint();
+            }
+        }
+    }
+
+    public int getButtonSize() {
+        return getWidth() / 9;
     }
 }
 

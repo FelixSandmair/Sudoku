@@ -1,158 +1,241 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Vector;
 
-public class Sudoku extends JFrame{
+public class Sudoku extends JFrame {
 
     public static int NOBUTTON = 100;
-    public static Color myGreen = new Color(0x0da336);
-
-    public static String schriftart = "MV Boli";
-
-    int displayWidth = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
-    int displayHeight = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
-
-    MyKeyListener mkl = new MyKeyListener(this);
-    PlayingField playingField = new PlayingField(this);
-
-    NumberField numberField = new NumberField(this);
-    JButton wrong = new JButton();
-    Color[] colors; //0:background1, 1:own numbers, 2:background2, 3:selectedField, 4:grid and fixed numbers
-    int difficulty; //0 = easy, 1 = medium, 2 = hard
-    Sudoku(int difficulty, Color[] colors, int prevX, int prevY) {
+    public static String FONT = "MV Boli";
+    private boolean muted = false;
+    private int displayWidth = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
+    private int displayHeight = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
+    private PlayingField playingField;
+    private NumberField numberField;
+    private MyKeyListener mkl;
+    private JButton muteButton = new JButton();
+    private JButton menuWin = new JButton();
+    private JButton loosingScreen = new JButton();
+    private JLabel winningScreen = new JLabel();
+    private JLayeredPane background = new JLayeredPane();
+    private Color[] colors; //0:background1, 1:own numbers, 2:background2, 3:selectedField, 4:grid and fixed numbers
+    private int theme;
+    private Difficulty difficulty; //0 = easy, 1 = medium, 2 = hard
+    Sudoku(Difficulty difficulty, Color[] colors, int prevX, int prevY, int prevWidth, int prevHeight, int theme) {
         this.colors = colors;
         this.difficulty = difficulty;
-        setFrame();
-        playingField.setNumberField(numberField);
-        numberField.setPlayingField(playingField);
-        playingField.setup();
-        numberField.setup();
-        /*setPlayingField(new int[]{  0,1,3,                      //1 2 3
-                                    0,5,4, //1                  //4 5 6
-                                    0,8,2,                      //7 8 9
+        this.theme = theme;
+        this.playingField = new PlayingField(this);
+        this.numberField = new NumberField(this);
+        this.mkl = new MyKeyListener(playingField, numberField);
 
-                7,0,4,
-                0,9,0, //2
-                1,5,6,
 
-                5,8,9,
-                0,0,0, //3
-                0,7,3,
+        setFrame(prevWidth, prevHeight, prevX, prevY);
 
-                0,7,0,
-                1,9,0, //4
-                3,0,0,
-
-                0,6,0,
-                0,0,0, //5
-                0,0,1,
-
-                0,0,0,
-                0,4,7,  //6
-                2,5,0,
-
-                0,0,0,
-                5,0,0,  //7
-                0,3,0,
-
-                6,3,0,
-                0,0,0,  //8
-                2,0,7,
-
-                7,9,0,
-                0,0,2,  //9
-                0,0,0,});*/
-        this.setLocation(prevX + 750 - getWidth()/2, prevY + 530 - getHeight()/2);
-        this.repaint();
+        repaint();
     }
 
-    public void setFrame() {
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setTitle("Sudoku");
-        this.setLayout(new BorderLayout());
-        this.setSize((displayHeight / 100) * 85, (displayHeight / 100) * 85);
-        this.setResizable(false);
-        this.setVisible(true);
-        this.addKeyListener(mkl);
-        this.add(playingField, BorderLayout.CENTER);
-        this.add(numberField, BorderLayout.SOUTH);
+    public Color getColor(int index) {
+        return colors[index];
     }
 
-    public void wrong(ActionEvent e) {
-        int row = playingField.getRowIndex(playingField.selectedField + 1);
-        int collumn = playingField.getCollumnIndex(playingField.selectedField + 1);
-        playingField.buttons[playingField.selectedField].setText("");
-        playingField.fieldBlocks[playingField.selectedField] = 0;
-        playingField.fieldRows[row * 9 + collumn] = 0;
-        playingField.fieldCollumns[collumn * 9 + row] = 0;
-        if(playingField.counterVec.contains(playingField.selectedField)) {
-            playingField.counterVec.remove(playingField.selectedField);
-        }
-        this.remove(wrong);
-        this.add(playingField, BorderLayout.CENTER);
-        this.add(numberField, BorderLayout.SOUTH);
-        this.repaint();
+    //GUI setup functions
+    /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+    private void setFrame(int prevWidth, int prevHeight, int prevX, int prevY) {
+        //Frame settings
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("Sudoku");
+        setLayout(null);
+        setSize(prevWidth, prevHeight);
+        setResizable(false);
+        setLocation(prevX + prevWidth/2 - getWidth()/2, prevY + prevHeight/2 - getHeight()/2);
+        setFocusable(true);
+        addKeyListener(mkl);
+        setVisible(true);
+        add(background);
+
+        //Background Layered Pane setup
+        background.setBackground(colors[2]);
+        background.setOpaque(true);
+        background.setBounds(0,0,displayWidth, displayHeight);
+        background.add(playingField, Integer.valueOf(1));
+        background.add(numberField, Integer.valueOf(1));
+        background.add(winningScreen,Integer.valueOf(1));
+        background.add(loosingScreen,Integer.valueOf(1));
+        background.add(muteButton, Integer.valueOf(1));
+
+        //setup playing field panel and number field panel and adding it to the background
+        playingField.setup(prevWidth, prevHeight, numberField, difficulty);
+        numberField.setup(playingField);
+
+        //setup winning screen and make it invisible
+        winningScreen.setIcon(new ImageIcon("images\\Theme " + theme + "\\Win.png"));
+        winningScreen.setBounds(0,0, winningScreen.getIcon().getIconWidth(), winningScreen.getIcon().getIconHeight());
+        winningScreen.setVisible(false);
+        winningScreen.add(menuWin);
+
+        //Menu button for winning screen
+        menuWin.setIcon(new ImageIcon("images\\Theme " + theme + "\\Menu.png"));
+        menuWin.setRolloverIcon(new ImageIcon("images\\Theme " + theme + "\\Menu - Active.png"));
+        menuWin.setPressedIcon(new ImageIcon("images\\Theme " + theme + "\\Menu - Pressed.png"));
+        menuWin.setBounds(winningScreen.getWidth()/2 - menuWin.getIcon().getIconWidth()/2, winningScreen.getHeight()/2 - menuWin.getIcon().getIconHeight()/2 - 50,
+                menuWin.getIcon().getIconWidth(), menuWin.getIcon().getIconHeight());
+        menuWin.setBorderPainted(false);
+        menuWin.addActionListener(this::menuWinListener);
+
+        //setting up loosing screen and make it invisible
+        loosingScreen.setIcon(new ImageIcon("images\\Theme " + theme + "\\Mistake.png"));
+        loosingScreen.setBounds(0,0, loosingScreen.getIcon().getIconWidth(), loosingScreen.getIcon().getIconHeight());
+        loosingScreen.setBorderPainted(false);
+        loosingScreen.addActionListener(this::loosingListener);
+        loosingScreen.setVisible(false);
+
+        //setting mute button
+        muteButton.setIcon(new ImageIcon("images\\Theme " + theme + "\\Sound.png"));
+        muteButton.setRolloverIcon(new ImageIcon("images\\Theme " + theme + "\\Sound.png"));
+        muteButton.setPressedIcon(new ImageIcon("images\\Theme " + theme + "\\Mute.png"));
+        muteButton.setBorderPainted(false);
+        muteButton.setBounds(playingField.getX() + playingField.getWidth() + 30, playingField.getY() + playingField.getButtonSize()/2 - muteButton.getIcon().getIconHeight()/2, muteButton.getIcon().getIconWidth(), muteButton.getIcon().getIconHeight());
+        muteButton.addActionListener(this::muteButtonListener);
     }
 
-    public void checkIfWon() {
-        Vector<Integer> help = new Vector<>();
-        boolean won = true;
-        for(int i = 0; i < 9 && won; i++) {
-            for(int j = 0; j < 9 && won; j++) {
-                if(help.contains(playingField.fieldRows[i*9 + j])) {
-                    won = false;
-                } else {
-                    help.add(playingField.fieldRows[i*9 + j]);
-                }
-            }
-            System.out.println("row " + i + " is " + won);
-            help = new Vector<>();
-        }
-        for(int i = 0; i < 9 && won; i++) {
-            for(int j = 0; j < 9 && won; j++) {
-                if(help.contains(playingField.fieldCollumns[i*9 + j])) {
-                    won = false;
-                } else {
-                    help.add(playingField.fieldCollumns[i*9 + j]);
-                }
-            }
-            System.out.println("Collumn " + i + " is " + won);
-            help = new Vector<>();
-        }
-        for(int i = 0; i < 9 && won; i++) {
-            for(int j = 0; j < 9 && won; j++) {
-                if(help.contains(playingField.fieldBlocks[i*9 + j])) {
-                    won = false;
-                } else {
-                    help.add(playingField.fieldBlocks[i*9 + j]);
-                }
-            }
-            System.out.println("Block " + i + " is " + won);
-            help = new Vector<>();
-        }
-        if(won) {
-            this.remove(playingField);
-            this.remove(numberField);
-            JLabel finishScreen = new JLabel();
-            finishScreen.setText("You have won!");
-            finishScreen.setFont(new Font(schriftart, Font.BOLD, 100));
-            finishScreen.setVerticalTextPosition(JLabel.CENTER);
-            finishScreen.setHorizontalAlignment(JLabel.CENTER);
-            finishScreen.setBackground(myGreen);
-            finishScreen.setOpaque(true);
-            this.add(finishScreen);
-            this.repaint();
+
+    //mute button listener
+    private void muteButtonListener(ActionEvent e) {
+        if(!muted) {
+            muteButton.setIcon(new ImageIcon("images\\Theme " + theme + "\\Mute.png"));
+            muteButton.setRolloverIcon(new ImageIcon("images\\Theme " + theme + "\\Mute.png"));
+            muteButton.setPressedIcon(new ImageIcon("images\\Theme " + theme + "\\Sound.png"));
+            muted = true;
         } else {
-            wrong.setText("Your Sudoku is not solved correctly");
-            wrong.setBackground(Color.red);
-            wrong.setFont(new Font(schriftart, Font.BOLD, 100));
-            wrong.setFocusable(false);
-            wrong.addActionListener(this::wrong);
-            this.remove(playingField);
-            this.remove(numberField);
-            this.add(wrong);
-            this.repaint();
+            muteButton.setIcon(new ImageIcon("images\\Theme " + theme + "\\Sound.png"));
+            muteButton.setRolloverIcon(new ImageIcon("images\\Theme " + theme + "\\Sound.png"));
+            muteButton.setPressedIcon(new ImageIcon("images\\Theme " + theme + "\\Mute.png"));
+            muted = false;
         }
+        repaint();
+    }
+
+    //menu button listener
+    private void menuWinListener(ActionEvent e) {
+        dispose();
+        SudokuLauncher sL = new SudokuLauncher(getX(), getY());
+    }
+
+    //ActionListener for the loosing screen button
+    private void loosingListener(ActionEvent e) {
+        playingField.deleteNumberFromSelectedCell();
+        background.setOpaque(true);
+        playingField.setVisible(true);
+        numberField.setVisible(true);
+        loosingScreen.setVisible(false);
+        addKeyListener(mkl);
+        repaint();
+    }
+
+    //checks if the Sudoku is solved correctly and
+    public void checkIfWon() {
+        playingField.setVisible(false);
+        numberField.setVisible(false);
+        background.setOpaque(false);
+        removeKeyListener(mkl);
+        if (SudokuGenerator.isPerfect(playingField.getGridRows())) {
+            winningScreen.setVisible(true);
+        } else {
+            loosingScreen.setVisible(true);
+        }
+        repaint();
+    }
+
+    //returns column from blockIndex
+    public static int getColumn(int blockIndex) {
+        int block = blockIndex / 9;
+        switch (blockIndex % 3) {
+            //column 0, 3 or 6
+            case 0 -> {
+                return switch (block % 3) {
+                    //block 0, 3, 6 => column 0
+                    case 0 -> 0;
+                    //block 0, 3, 6 => column 0
+                    case 1 -> 3;
+                    //column 6 last option
+                    default -> 6;
+                };
+            }
+            //column 1, 4 or 7
+            case 1 -> {
+                return switch (block % 3) {
+                    //block 0, 3, 6 => column 1
+                    case 0 -> 1;
+                    //block 0, 3, 6 => column 4
+                    case 1 -> 4;
+                    //column 7 last option
+                    default -> 7;
+                };
+            }
+            //column 2, 5 or 8
+            case 2 -> {
+                return switch (block % 3) {
+                    //block 0, 3, 6 => column 2
+                    case 0 -> 2;
+                    //block 0, 3, 6 => column 5
+                    case 1 -> 5;
+                    //column 8 last option
+                    default -> 8;
+                };
+            }
+        }
+        return 0;
+    }
+
+    //returns row from blockIndex
+    public static int getRow(int blockIndex) {
+        switch (blockIndex % 9) {
+            //row 0, 3 or 6
+            case 0, 1, 2 -> {
+                //block 0, 1 or 2 => row 0
+                if (blockIndex < 27) {
+                    return 0;
+                }
+                //block 3, 4 or 5 => row 3
+                if (blockIndex < 54) {
+                    return 3;
+                }
+                //column 6 last option
+                return 6;
+            }
+            //row 1, 4 or 7
+            case 3, 4, 5 -> {
+                //block 0, 1 or 2 => row 1
+                if (blockIndex < 27) {
+                    return 1;
+                }
+                //block 3, 4 or 5 => row 4
+                if (blockIndex < 54) {
+                    return 4;
+                }
+                //column 7 last option
+                return 7;
+            }
+            //row 2, 5 or 8
+            case 6, 7, 8 -> {
+                //block 0, 1 or 2 => row 2
+                if (blockIndex < 27) {
+                    return 2;
+                }
+                //block 3, 4 or 5 => row 5
+                if (blockIndex < 54) {
+                    return 5;
+                }
+                //column 8 last option
+                return 8;
+            }
+            default -> {
+                return 0;
+            }
+        }
+    }
+
+    public static int getBlockIndexFromRow(int rowIndex) {
+        return ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex % 3);
     }
 }

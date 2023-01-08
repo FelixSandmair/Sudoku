@@ -12,8 +12,8 @@ public class SudokuLauncher extends JFrame {
 
     Color[][] colors = {{new Color(0xffffff), new Color(0xbe1622), new Color(0x999999), new Color(0x575756), new Color(0x1d1d1b)}
             ,{new Color(0xfeeee0), new Color(0xcfb7a3), new Color(0xb39378), new Color(0x9c6e4a), new Color(0x644229)}
-            ,{new Color(0xe8e7e7), new Color(0x9aca8a), new Color(0xcc8481), new Color(0x789b7b), new Color(0x8c7763)}
-            ,{new Color(0xfffcf7), new Color(0xdfccc3), new Color(0xbbcac0), new Color(0x87886c), new Color(0xcc9868)}
+            ,{new Color(0xf1e5ed), new Color(0xe2b8d7), new Color(0xc695c3), new Color(0x936aab), new Color(0x4e3c5a)}
+            ,{new Color(0xe7d1c4), new Color(0xf0855c), new Color(0xbf938f), new Color(0x655772), new Color(0x322942)}
             ,{new Color(0xe3ecec), new Color(0x9dcef1), new Color(0x94acb7), new Color(0x1e6a6f), new Color(0x1e4a58)}};
     int theme = 1;
     JButton start = new JButton();
@@ -33,16 +33,31 @@ public class SudokuLauncher extends JFrame {
     SudokuLauncher() {
         int width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
         int height = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
+
         setLocation(width/2 - 750, height/2 - 530);
+
         setTitleScreen();
+    }
+
+    //used for menu buttons to go back to menuVVVJHK
+
+    SudokuLauncher(int prevX, int prevY) {
+        int width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
+        int height = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
+
+        setLocation(prevX, prevY);
+
+        setTitleScreen();
+
+        startListener(new ActionEvent(hard, 1, ""));
     }
 
     public void setTitleScreen() {
         //setup this frame
         setLayout(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(1500,1060);
-        setResizable(false);
+        setSize(1500,1030);
+        setResizable(true);
         setTitle("");
         setIconImage(new ImageIcon("images\\GameIcon.jpeg").getImage());
         add(background);
@@ -138,7 +153,7 @@ public class SudokuLauncher extends JFrame {
 
         //Set new background
         backgroundLauncher.setIcon(new ImageIcon("images\\Theme " + theme + "\\Hintergrund.png"));
-        backgroundLauncher.setBounds(0,0,1500,1060);
+        backgroundLauncher.setBounds(0,0,backgroundLauncher.getIcon().getIconWidth(),backgroundLauncher.getIcon().getIconHeight());
         background.add(backgroundLauncher,Integer.valueOf(0));
 
         //Sudoku logo on background
@@ -183,7 +198,7 @@ public class SudokuLauncher extends JFrame {
 
         //set Logo
         logoLabel.setIcon(new ImageIcon("images\\Theme " + theme + "\\Logo.png"));
-        logoLabel.setBounds(1500 - logoLabel.getIcon().getIconWidth() - 35, 1060 - logoLabel.getIcon().getIconHeight() - 50, logoLabel.getIcon().getIconWidth(), logoLabel.getIcon().getIconHeight());
+        logoLabel.setBounds(backgroundLauncher.getIcon().getIconWidth() - logoLabel.getIcon().getIconWidth() - 35, backgroundLauncher.getIcon().getIconHeight() - logoLabel.getIcon().getIconHeight() - 50, logoLabel.getIcon().getIconWidth(), logoLabel.getIcon().getIconHeight());
         background.add(logoLabel, Integer.valueOf(1));
 
         setDifficultyButtons();
@@ -230,6 +245,7 @@ public class SudokuLauncher extends JFrame {
                 colorThemeChooser[i].setBounds(colorTheme.getX() + XOffset + colorThemeChooser[i].getWidth() * i + 20, colorTheme.getY() + colorTheme.getIcon().getIconHeight() + YOffset, colorThemeChooser[i].getWidth(), colorThemeChooser[i].getHeight());
                 colorThemeChooser[i].setVisible(true);
             }
+            colorThemeChooser[theme-1].setIcon(new ImageIcon("images\\Theme " + theme + "\\Theme #" + theme + " - Active.png"));
             quit.setBounds(colorThemeChooser[0].getX() + XOffset, colorThemeChooser[0].getY() + colorThemeChooser[0].getHeight() + YOffset, quit.getWidth(), quit.getHeight());
         } else {
             for(int i = 0; i < 5; i++) {
@@ -292,16 +308,16 @@ public class SudokuLauncher extends JFrame {
     }
 
     public void difficultyListeners(ActionEvent e) {
+        dispose();
         if(e.getSource() == easy) {
-            Sudoku s = new Sudoku(0, colors[theme-1], getX(), getY());
+            Sudoku s = new Sudoku(Difficulty.EASY, colors[theme-1], getX(), getY(), getWidth(), getHeight(), theme);
         }
         if(e.getSource() == medium) {
-            Sudoku s = new Sudoku(1, colors[theme-1], getX(), getY());
+            Sudoku s = new Sudoku(Difficulty.MEDIUM, colors[theme-1], getX(), getY(), getWidth(), getHeight(), theme);
         }
         if(e.getSource() == hard) {
-            Sudoku s = new Sudoku(2, colors[theme-1], getX(), getY());
+            Sudoku s = new Sudoku(Difficulty.HARD, colors[theme-1], getX(), getY(), getWidth(), getHeight(), theme);
         }
-        dispose();
     }
 
     public void colorChooserListener(ActionEvent e) {
