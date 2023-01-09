@@ -4,12 +4,10 @@ import java.awt.event.KeyListener;
 //KeyListener class that waits for number and notation number input
 public class MyKeyListener implements KeyListener {
 
-    private PlayingField playingField;
-    private NumberField numberField;
+    private final PlayingField playingField;
 
-    MyKeyListener(PlayingField playingField, NumberField numberField) {
+    MyKeyListener(PlayingField playingField) {
         this.playingField = playingField;
-        this.numberField = numberField;
     }
 
     @Override
@@ -46,24 +44,17 @@ public class MyKeyListener implements KeyListener {
 
         //Keycode 106 is the multiply key of the numpad (looks like an x) and deletes all the notes made previously
         if (e.getKeyCode() == 106) {
-            playingField.deletAllNotesInSelectedCell();
+            playingField.deleteAllNotesInSelectedCell();
             return;
         }
 
         switch (e.getKeyCode()) {
-            case 37:
-                playingField.moveSelectedCell(-1,0);
-                break;
-            case 38:
-                playingField.moveSelectedCell(0,-1);
-                break;
-            case 39:
-                playingField.moveSelectedCell(1,0);
-                break;
-            case 40:
-                playingField.moveSelectedCell(0,1);
-                break;
-            default:
+            case 37 -> playingField.moveSelectedCell(-1, 0);
+            case 38 -> playingField.moveSelectedCell(0, -1);
+            case 39 -> playingField.moveSelectedCell(1, 0);
+            case 40 -> playingField.moveSelectedCell(0, 1);
+            default -> {
+            }
         }
     }
 }

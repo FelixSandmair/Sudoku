@@ -1,49 +1,27 @@
 import java.util.Arrays;
 import java.util.Vector;
 
+
+//this is a class used to solve sudokus
+//different difficulties can be set to tell the solver which strategies are used to try to solve the sudoku (not yet finished)
 public class Solver {
-    public boolean nakedUsed = false;
     private Difficulty difficulty;
     private int emptyCells = 0;
     private int[] gridRows;
     private int[] gridColumns = new int[81];
     private int[] gridBlocks = new int[81];
-    private int[][] gridRowsNotes = new int[81][9];
-    private int[] gridRowsNotesCounter = new int[81];
-    private int[][] gridColumnsNotes = new int[81][9];
-    private int[] gridColumnsNotesCounter = new int[81];
-    private int[][] gridBlocksNotes = new int[81][9];
-    private int[] gridBlocksNotesCounter = new int[81];
+    private final int[][] gridRowsNotes = new int[81][9];
+    private final int[] gridRowsNotesCounter = new int[81];
+    private final int[][] gridColumnsNotes = new int[81][9];
+    private final int[] gridColumnsNotesCounter = new int[81];
+    private final int[][] gridBlocksNotes = new int[81][9];
+    private final int[] gridBlocksNotesCounter = new int[81];
     Solver(int[] gridRows, Difficulty difficulty) {
         this.gridRows = gridRows;
         this.difficulty = difficulty;
         setGridColumns();
         setGridBlocks();
         setNotes();
-    }
-
-    Solver() {
-        gridRowsNotes[0] = new int[]{0,1,0,1,0,1,0,0,0};
-        gridRowsNotes[1] = new int[]{0,0,0,1,0,1,0,0,0};
-        gridRowsNotes[2] = new int[]{0,1,0,1,0,1,0,0,1};
-        gridRowsNotes[3] = new int[]{0,1,0,0,0,1,0,0,0};
-        gridRowsNotes[4] = new int[]{0,0,0,1,0,1,0,0,0};
-        gridRowsNotes[5] = new int[]{1,1,0,0,0,0,0,0,0};
-        gridRowsNotes[6] = new int[]{1,1,1,0,0,0,0,0,0};
-        gridRowsNotes[7] = new int[]{0,0,0,1,0,1,0,0,0};
-        gridRowsNotes[8] = new int[]{1,0,0,1,0,1,0,0,0};
-
-        gridRowsNotesCounter[0] = 3;
-        gridRowsNotesCounter[1] = 2;
-        gridRowsNotesCounter[2] = 4;
-        gridRowsNotesCounter[3] = 2;
-        gridRowsNotesCounter[4] = 2;
-        gridRowsNotesCounter[5] = 2;
-        gridRowsNotesCounter[6] = 3;
-        gridRowsNotesCounter[7] = 2;
-        gridRowsNotesCounter[8] = 3;
-
-        System.out.println(searchNakedPairRow());
     }
 
     //Sets column indexed grid representation
@@ -59,22 +37,22 @@ public class Solver {
 
     //Sets column indexed grid representation
     private void setGridBlocks() {
-        for(int i = 0; i < 81; i++) {
-            int perBox = ((i / 3) % 3) * 9 + ((i % 27) / 9) * 3 + (i / 27) * 27 + (i %3);
-            gridBlocks[i] = gridRows[perBox];
+        for(int rowIndex = 0; rowIndex < 81; rowIndex++) {
+            int perBox = Sudoku.getBlockIndexFromRow(rowIndex);
+            gridBlocks[rowIndex] = gridRows[perBox];
         }
     }
 
     //Sets Notes and the Notes counter for each cell and representation
     private void setNotes() {
-        for(int i = 0; i < 81; i++) {
-            gridRowsNotesCounter[i] = 0;
-            gridColumnsNotesCounter[i] = 0;
-            gridBlocksNotesCounter[i] = 0;
-            for(int j = 0; j < 9; j++) {
-                gridRowsNotes[i][j] = 0;
-                gridColumnsNotes[i][j] = 0;
-                gridBlocksNotes[i][j] = 0;
+        for(int cell = 0; cell < 81; cell++) {
+            gridRowsNotesCounter[cell] = 0;
+            gridColumnsNotesCounter[cell] = 0;
+            gridBlocksNotesCounter[cell] = 0;
+            for(int number = 0; number < 9; number++) {
+                gridRowsNotes[cell][number] = 0;
+                gridColumnsNotes[cell][number] = 0;
+                gridBlocksNotes[cell][number] = 0;
             }
         }
     }
@@ -94,7 +72,7 @@ public class Solver {
     //deletes cell at rowIndex (updates all representations) and returns deleted number
     public int deleteCell(int rowIndex) {
         int removed = gridRows[rowIndex];
-        int blockIndex = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
+        int blockIndex = Sudoku.getBlockIndexFromRow(rowIndex);
         int columnIndex = (rowIndex % 9) * 9 + rowIndex / 9;
 
         gridRows[rowIndex] = 0;
@@ -108,7 +86,7 @@ public class Solver {
 
     //fills cell at rowIndex (updates all representations) with the value of number
     public void fillCell(int rowIndex, int number) {
-        int blockIndex = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
+        int blockIndex = Sudoku.getBlockIndexFromRow(rowIndex);
         int columnIndex = (rowIndex % 9) * 9 + rowIndex / 9;
 
         gridRows[rowIndex] = number;
@@ -138,14 +116,14 @@ public class Solver {
         for(int cell = 0; cell < 81; cell++) {
             //setup notes vector
             notes.removeAllElements();
-            for(int i = 1; i < 10; i++) {
-                notes.add(i);
+            for(int number = 1; number < 10; number++) {
+                notes.add(number);
             }
             //if cell is empty we set the notes
             if(gridRows[cell] == 0) {
                 row = cell/9;
                 column = cell%9;
-                blockIndex = ((cell / 3) % 3) * 9 + ((cell % 27) / 9) * 3 + (cell / 27) * 27 + (cell %3);
+                blockIndex = Sudoku.getBlockIndexFromRow(cell);
                 block = blockIndex/9;
                 //removes the numbers from the notes vector that appear in the cells row, column or block
                 for(int walker = 0; walker < 9; walker++) {
@@ -175,7 +153,7 @@ public class Solver {
     private void deleteNotes(int rowIndex, int number) {
         int row = rowIndex/9;
         int column = rowIndex%9;
-        int blockIndex = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
+        int blockIndex = Sudoku.getBlockIndexFromRow(rowIndex);
         int block = blockIndex/9;
 
         //deletes the notes of the number that was set in the cells block, column and row
@@ -186,8 +164,8 @@ public class Solver {
         }
 
         //deletes all the notes from the cell that was just placed
-        for(int i = 0; i < 9; i++) {
-            removeNotesRow(rowIndex, i);
+        for(int num = 0; num < 9; num++) {
+            removeNotesRow(rowIndex, num);
         }
     }
 
@@ -203,7 +181,7 @@ public class Solver {
             //if the cells notes counter is one that we can insert the number for the counter
             if(gridRowsNotesCounter[cell] == 1) {
                 columnIndex = (cell % 9) * 9 + cell / 9;
-                blockIndex = ((cell / 3) % 3) * 9 + ((cell % 27) / 9) * 3 + (cell / 27) * 27 + (cell % 3);
+                blockIndex = Sudoku.getBlockIndexFromRow(cell);
 
                 //searches for single number that is noted in the current cell and then exits function by returning true
                 for(int numberToInsert = 1; numberToInsert < 10; numberToInsert++) {
@@ -236,11 +214,11 @@ public class Solver {
         boolean onlyOnce = false;
         for(int numberToInsert = 1; numberToInsert < 10; numberToInsert++) {    //check numbers 1 through 9 if there is only one possible place to be in block 0 to 8
             for(int block = 0; block < 9; block++) {    //checking block 'block' to place numberToInsert
-                for(int i = 0; i < 9; i++) {    //i walks through block 'block'
-                    if(gridBlocksNotes[block*9 + i][numberToInsert-1] == 1) {
+                for(int walker = 0; walker < 9; walker++) {    //walker goes through block 'block'
+                    if(gridBlocksNotes[block*9 + walker][numberToInsert-1] == 1) {
                         if(!onlyOnce) {     //encountered numberToInsert for the first time
                             onlyOnce = true;
-                            cellToFill = block * 9 + i;
+                            cellToFill = block * 9 + walker;
                         } else { //encountered numberToInsert for the second time, and we don't need to continue searching
                             onlyOnce = false;
                             break;
@@ -277,11 +255,11 @@ public class Solver {
         boolean onlyOnce = false;
         for(int numberToInsert = 1; numberToInsert < 10; numberToInsert++) {    //check numbers 1 through 9 if there is only one possible place to be in row 0 to 8
             for(int row = 0; row < 9; row++) {    //checking row to place numberToInsert
-                for(int i = 0; i < 9; i++) {    //i walks through row
-                    if(gridRowsNotes[row*9 + i][numberToInsert-1] == 1) {
+                for(int walker = 0; walker < 9; walker++) {    //walker walks through row
+                    if(gridRowsNotes[row*9 + walker][numberToInsert-1] == 1) {
                         if(!onlyOnce) {     //encountered numberToInsert for the first time
                             onlyOnce = true;
-                            cellToFill = row * 9 + i;
+                            cellToFill = row * 9 + walker;
                         } else {    //encountered numberToInsert for the second time, we don't need to continue searching
                             onlyOnce = false;
                             break;
@@ -290,7 +268,7 @@ public class Solver {
                 }
                 if(onlyOnce) {  //found numberToInsert once
                     columnIndex = (cellToFill % 9) * 9 + cellToFill / 9;
-                    blockIndex = ((cellToFill / 3) % 3) * 9 + ((cellToFill % 27) / 9) * 3 + (cellToFill / 27) * 27 + (cellToFill % 3);
+                    blockIndex = Sudoku.getBlockIndexFromRow(cellToFill);
 
                     //print statements for debugging
                     //System.out.println();
@@ -318,11 +296,11 @@ public class Solver {
         boolean onlyOnce = false;
         for(int numberToInsert = 1; numberToInsert < 10; numberToInsert++) {    //check numbers 1 through 9 if there is only one possible place to be in block 0 to 8
             for(int column = 0; column < 9; column++) {    //checking block 'block' to place numberToInsert
-                for(int i = 0; i < 9; i++) {    //i walks through block 'block'
-                    if(gridColumnsNotes[column*9 + i][numberToInsert-1] == 1) {
+                for(int walker = 0; walker < 9; walker++) {    //walker walks through block 'block'
+                    if(gridColumnsNotes[column*9 + walker][numberToInsert-1] == 1) {
                         if(!onlyOnce) {     //encountered numberToInsert for the first time
                             onlyOnce = true;
-                            cellToFill = column * 9 + i;
+                            cellToFill = column * 9 + walker;
                         } else {    //encountered numberToInsert for the second time, and we don't need to continue searching
                             onlyOnce = false;
                             break;
@@ -331,7 +309,7 @@ public class Solver {
                 }
                 if(onlyOnce) {  //found numberToInsert once
                     rowIndex = (cellToFill % 9) * 9 + cellToFill / 9;
-                    blockIndex = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex % 3);
+                    blockIndex = Sudoku.getBlockIndexFromRow(rowIndex);
 
                     //print statements for debugging
                     //System.out.println();
@@ -351,31 +329,44 @@ public class Solver {
         return false;
     }
 
-    //searches for naked pair in the sudoku row notes
-    public boolean searchNakedPairRow() {
-        //search pair in row
+    //searches for naked pair in the sudoku row notes and deletes notes based on that naked pair
+    private boolean searchNakedPairRow() {
         boolean foundNaked = false;
         boolean notesChanged = false;
         int firstIndex = 0;
         int secondIndex = 0;
         int num1 = 10;
         int num2 = 10;
+
+        //search in each row
         for(int row = 0; row < 9; row++) {
+            //walks through row
             for (int walker = 0; walker < 9; walker++) {
+                //when the counter of the current cell is equal to 2 we search for a second cell with the same numbers noted
                 if (gridRowsNotesCounter[row * 9 + walker] == 2) {
                     for (int i = 0; i < 9; i++) {
-                        if (gridRowsNotesCounter[row * 9 + i] == 2 && Arrays.equals(gridRowsNotes[row * 9 + walker], gridRowsNotes[row * 9 + i]) && i != walker) {
+                        if (gridRowsNotesCounter[row * 9 + i] == 2
+                                && Arrays.equals(gridRowsNotes[row * 9 + walker], gridRowsNotes[row * 9 + i])
+                                && i != walker) {
+                            //if i is smaller than walker then we already checked this naked pair
+                            if(i < walker) {
+                                break;
+                            }
                             if (!foundNaked) {
+                                //first time we encountered a cell with the same pair
                                 foundNaked = true;
                                 firstIndex = walker;
                                 secondIndex = i;
                             } else {
+                                //second time we encountered a cell with the same pair (no naked pair anymore)
                                 foundNaked = false;
                                 break;
                             }
                         }
                     }
+
                     if (foundNaked) {
+                        //check which are the two numbers of the naked pair
                         for(int number = 0; number < 9; number++) {
                             if(gridRowsNotes[row * 9 + firstIndex][number] == 1) {
                                 if(num1 == 10) {
@@ -386,6 +377,8 @@ public class Solver {
                                 }
                             }
                         }
+
+                        //delete the notes of num1 and num2 in the cells of the row
                         for(int i = 0; i < 9; i++) {
                             if(i != firstIndex && i != secondIndex) {
                                 if(gridRowsNotes[row * 9 + i][num1] == 1) {
@@ -398,6 +391,8 @@ public class Solver {
                                 }
                             }
                         }
+
+                        //reset variables for next loop iteration
                         foundNaked = false;
                         num1 = 10;
                         num2 = 10;
@@ -405,32 +400,47 @@ public class Solver {
                 }
             }
         }
+        //if there was a change done to the notes it is notesChange is true
         return notesChanged;
     }
 
-    public boolean searchNakedPairColumn() {
+    //searches for naked pair in the sudoku column notes and deletes notes based on that naked pair
+    private boolean searchNakedPairColumn() {
         boolean foundNaked = false;
         boolean notesChanged = false;
         int firstIndex = 0;
         int secondIndex = 0;
         int num1 = 10;
         int num2 = 10;
+
+        //search in each column
         for(int column = 0; column < 9; column++) {
+            //walks through column
             for (int walker = 0; walker < 9; walker++) {
+                //when the counter of the current cell is equal to 2 we search for a second cell with the same numbers noted
                 if (gridColumnsNotesCounter[column * 9 + walker] == 2) {
                     for (int i = 0; i < 9; i++) {
-                        if (gridColumnsNotesCounter[column * 9 + i] == 2 && Arrays.equals(gridColumnsNotes[column * 9 + walker], gridColumnsNotes[column * 9 + i]) && i != walker) {
+                        if (gridColumnsNotesCounter[column * 9 + i] == 2
+                                && Arrays.equals(gridColumnsNotes[column * 9 + walker], gridColumnsNotes[column * 9 + i])
+                                && i != walker) {
+                            //if i is smaller than walker then we already checked this naked pair
+                            if(i < walker) {
+                                break;
+                            }
                             if (!foundNaked) {
+                                //first time we encountered a cell with the same pair
                                 foundNaked = true;
                                 firstIndex = walker;
                                 secondIndex = i;
                             } else {
+                                //second time we encountered a cell with the same pair (no naked pair anymore)
                                 foundNaked = false;
                                 break;
                             }
                         }
                     }
                     if (foundNaked) {
+                        //check which are the two numbers of the naked pair
                         for(int number = 0; number < 9; number++) {
                             if(gridColumnsNotes[column * 9 + firstIndex][number] == 1) {
                                 if(num1 == 10) {
@@ -441,6 +451,8 @@ public class Solver {
                                 }
                             }
                         }
+
+                        //delete the notes of num1 and num2 in the cells of the row
                         for(int i = 0; i < 9; i++) {
                             if(i != firstIndex && i != secondIndex) {
                                 if(gridColumnsNotes[column * 9 + i][num1] == 1) {
@@ -453,6 +465,8 @@ public class Solver {
                                 }
                             }
                         }
+
+                        //reset variables for next loop iteration
                         foundNaked = false;
                         num1 = 10;
                         num2 = 10;
@@ -460,36 +474,47 @@ public class Solver {
                 }
             }
         }
+        //if there was a change done to the notes it is notesChange is true
         return notesChanged;
     }
 
-    public boolean searchNakedPairBlock() {
-        //search pair in row
+    //searches for naked pair in the sudoku block notes and deletes notes based on that naked pair
+    private boolean searchNakedPairBlock() {
         boolean foundNaked = false;
         boolean notesChanged = false;
         int firstIndex = 0;
         int secondIndex = 0;
         int num1 = 10;
         int num2 = 10;
+
+        //search in each block
         for(int block = 0; block < 9; block++) {
+            //walks through column
             for (int walker = 0; walker < 9; walker++) {
+                //when the counter of the current cell is equal to 2 we search for a second cell with the same numbers noted
                 if (gridBlocksNotesCounter[block * 9 + walker] == 2) {
                     for (int i = 0; i < 9; i++) {
-                        if (gridBlocksNotesCounter[block * 9 + i] == 2 && Arrays.equals(gridBlocksNotes[block * 9 + walker], gridBlocksNotes[block * 9 + i]) && i != walker) {
+                        if (gridBlocksNotesCounter[block * 9 + i] == 2
+                                && Arrays.equals(gridBlocksNotes[block * 9 + walker], gridBlocksNotes[block * 9 + i])
+                                && i != walker) {
+                            //if i is smaller than walker then we already checked this naked pair
                             if(i < walker) {
                                 break;
                             }
                             if (!foundNaked) {
+                                //first time we encountered a cell with the same pair
                                 foundNaked = true;
                                 firstIndex = walker;
                                 secondIndex = i;
                             } else {
+                                //second time we encountered a cell with the same pair (no naked pair anymore)
                                 foundNaked = false;
                                 break;
                             }
                         }
                     }
                     if (foundNaked) {
+                        //check which are the two numbers of the naked pair
                         for(int number = 0; number < 9; number++) {
                             if(gridBlocksNotes[block * 9 + firstIndex][number] == 1) {
                                 if(num1 == 10) {
@@ -500,6 +525,8 @@ public class Solver {
                                 }
                             }
                         }
+
+                        //delete the notes of num1 and num2 in the cells of the row
                         for(int i = 0; i < 9; i++) {
                             if(i != firstIndex && i != secondIndex) {
                                 if(gridBlocksNotes[block * 9 + i][num1] == 1) {
@@ -512,6 +539,8 @@ public class Solver {
                                 }
                             }
                         }
+
+                        //reset variables for next loop iteration
                         foundNaked = false;
                         num1 = 10;
                         num2 = 10;
@@ -519,11 +548,12 @@ public class Solver {
                 }
             }
         }
+        //if there was a change done to the notes it is notesChange is true
         return notesChanged;
     }
 
     //removes notes based on rowIndex
-    public void removeNotesRow(int rowIndex, int number) {
+    private void removeNotesRow(int rowIndex, int number) {
         if(gridRowsNotes[rowIndex][number] == 1) {
             int column = rowIndex % 9;
             int row = rowIndex / 9;
@@ -532,7 +562,8 @@ public class Solver {
         }
     }
 
-    public void removeNotesColumn(int columnIndex, int number) {
+    //removes notes based on columnIndex
+    private void removeNotesColumn(int columnIndex, int number) {
         if(gridColumnsNotes[columnIndex][number] == 1) {
             int row = columnIndex % 9;
             int column = columnIndex / 9;
@@ -541,7 +572,8 @@ public class Solver {
         }
     }
 
-    public void removeNotesBlock(int blockIndex, int number) {
+    //removes notes based on blockIndex
+    private void removeNotesBlock(int blockIndex, int number) {
         if(gridBlocksNotes[blockIndex][number] == 1) {
             int row = Sudoku.getRow(blockIndex);
             int column = Sudoku.getColumn(blockIndex);
@@ -549,7 +581,8 @@ public class Solver {
         }
     }
 
-    public void removeNotes(int blockIndex, int rowIndex, int columnIndex, int number) {
+    //removes the note of number in the cells given by the 3 different indecies
+    private void removeNotes(int blockIndex, int rowIndex, int columnIndex, int number) {
         gridColumnsNotes[columnIndex][number] = 0;
         gridColumnsNotesCounter[columnIndex]--;
         gridRowsNotes[rowIndex][number] = 0;
@@ -558,10 +591,9 @@ public class Solver {
         gridBlocksNotesCounter[blockIndex]--;
     }
 
-    //function solves sGen configuration based on difficulty: EASY, MEDIUM, HARD
+    //function solves sGen configuration based on difficulty: EASY, MEDIUM, HARD (difficulty is not yet used it uses fixed strategy)
     public boolean solve() {
         int numberOfCellsToFill = emptyCells;
-        boolean found = false;
         initiateNotes();  //insert starting notes (Numbers that are possible in each cell)
         for(int iteration = 0; iteration < numberOfCellsToFill; iteration++) {
 

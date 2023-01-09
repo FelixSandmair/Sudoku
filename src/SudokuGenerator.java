@@ -3,10 +3,13 @@ import java.util.Collections;
 
 
 //This class generates a finished sudoku grid and then removes cells to get a solvable Sudoku
+//This class is not implemented completely by Felix Sandmair it is from the public repository
+//of mfgravesjr (https://github.com/mfgravesjr/finished-projects/tree/master/SudokuGridGenerator)
 public class SudokuGenerator {
     private int[] grid;
     private Solver s;
 
+    //The Constructor generates a sudoku of the desired difficulty
     SudokuGenerator(Difficulty difficulty) {
         int filledCells = 0;
         int counter = 0;

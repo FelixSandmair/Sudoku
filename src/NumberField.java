@@ -2,102 +2,130 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
+
+//Panel that hold the buttons used to insert notations and numbers in the sudoku grid
 public class NumberField extends JPanel {
-    private Sudoku s;
+    private final Sudoku s;
     private PlayingField playingField;
-    private JButton[] notationButtons = new JButton[10];
-    private JButton[] numberButtons = new JButton[10];
+    private final JButton[] notationButtons = new JButton[10];
+    private final JButton[] numberButtons = new JButton[10];
     NumberField(Sudoku s) {
         this.s = s;
     }
 
+    //this method is used to set up the number field with the corresponding playing field
     public void setup(PlayingField playingField) {
         this.playingField = playingField;
+
+        //set up the panel
+        setLayout(new GridLayout(1,10,15,0));
+        setSize(playingField.getCellSize() * 10 + 15 * 9, playingField.getCellSize());
+        setBackground(s.getColor(2));
+        setBounds(750-getWidth()/2, playingField.getY() + playingField.getHeight() + 50, getWidth(), getHeight());
+
+        //setup all the buttons
         setNumberButtons();
         setNotationButtons();
     }
 
-    public void setNumberButtons() {
-        setLayout(new GridLayout(1,10,15,0));
-        setSize(playingField.getButtonSize() * 10 + 15 * 9, playingField.getButtonSize());
-        setBackground(s.getColor(2));
-        setBounds(750-getWidth()/2, playingField.getY() + playingField.getHeight() + 50, getWidth(), getHeight());
-        for(int i = 0; i < 10; ++i) {
-            numberButtons[i] = new JButton();
-            numberButtons[i].setFont(new Font(Sudoku.FONT, Font.PLAIN, 50));
-            if(i != 9) {
-                numberButtons[i].setText("" + (i + 1));
-                numberButtons[i].addActionListener(this::numberButtons);
+    //This method sets up the buttons for the Big Numbers to put into the sudoku cell
+    private void setNumberButtons() {
+        for(int button = 0; button < 10; ++button) {
+            numberButtons[button] = new JButton();
+
+            //if button index is not 9 then it's a number button else it's the delete button
+            if(button != 9) {
+                numberButtons[button].setText("" + (button + 1));
+                numberButtons[button].addActionListener(this::numberButtons);
             } else {
-                numberButtons[i].setText("X");
-                numberButtons[i].addActionListener(this::deleteButton);
+                numberButtons[button].setText("X");
+                numberButtons[button].addActionListener(this::deleteButton);
             }
-            numberButtons[i].setBackground(s.getColor(0));
-            numberButtons[i].setForeground(s.getColor(4));
-            numberButtons[i].setBorder(BorderFactory.createLineBorder(s.getColor(4),3));
-            numberButtons[i].setFocusable(false);
-            numberButtons[i].setLayout(null);
-            add(numberButtons[i]);
+
+            //general button settings
+            numberButtons[button].setFont(new Font(Sudoku.FONT, Font.PLAIN, 50));
+            numberButtons[button].setBackground(s.getColor(0));
+            numberButtons[button].setForeground(s.getColor(4));
+            numberButtons[button].setBorder(BorderFactory.createLineBorder(s.getColor(4),3));
+            numberButtons[button].setFocusable(false);
+            numberButtons[button].setLayout(null);
+            add(numberButtons[button]);
         }
     }
 
-    public void numberButtons(ActionEvent e) {
-        int currentIndex = 0;
-        for(int i = 0; i < 9; ++i) {
-            if(e.getSource() == numberButtons[i]) {
-                currentIndex = i;
+    //this method is the action listener for the number buttons
+    //Once a number button is pressed we insert the number that was pressed into the selected cell of the playing field
+    private void numberButtons(ActionEvent e) {
+        //check which of the numbers was pressed
+        int numberPressed = 0;
+        for(int number = 0; number < 9; ++number) {
+            if (e.getSource() == numberButtons[number]) {
+                numberPressed = number + 1;
                 break;
             }
         }
-        playingField.setButtonNumber(currentIndex + 1);
+
+        playingField.setButtonNumber(numberPressed);
     }
 
-    public void deleteButton(ActionEvent e) {
+    //this method is the listener for the delete button
+    //it deletes the number from the selected field in the playing field and restores the old notes
+    private void deleteButton(ActionEvent e) {
         playingField.deleteNumberFromSelectedCell();
     }
 
-    public void setNotationButtons() {
-        for(int i = 0; i < 10; i++) {
-            notationButtons[i] = new JButton();
-            if(i != 9) {
-                notationButtons[i].setText("" + (i + 1));
-                notationButtons[i].addActionListener(this::notationButtonListener);
+    //set up the buttons for inserting the notes on the sudoku grid
+    private void setNotationButtons() {
+        //loop for all the buttons
+        for(int button = 0; button < 10; button++) {
+            notationButtons[button] = new JButton();
+
+            //if button index is 9 it's one of the number buttons else it's the delete button
+            if(button != 9) {
+                notationButtons[button].setText("" + (button + 1));
+                notationButtons[button].addActionListener(this::notationButtonListener);
             } else {
                 notationButtons[9].setText("X");
                 notationButtons[9].addActionListener(this::notationDeleteButtonListener);
             }
-            notationButtons[i].setFont(new Font(Sudoku.FONT, Font.BOLD, 20));
-            notationButtons[i].setBackground(s.getColor(0));
-            notationButtons[i].setBorder(BorderFactory.createLineBorder(s.getColor(4),2));
-            notationButtons[i].setVerticalAlignment(JButton.CENTER);
-            notationButtons[i].setHorizontalAlignment(JButton.CENTER);
-            notationButtons[i].setFocusable(false);
-            notationButtons[i].setOpaque(true);
-            notationButtons[i].setBounds(0,0,30,30);
-            notationButtons[i].setForeground(s.getColor(4));
-            numberButtons[i].add(notationButtons[i]);
+
+            //general settings for the buttons
+            notationButtons[button].setFont(new Font(Sudoku.FONT, Font.BOLD, 20));
+            notationButtons[button].setBackground(s.getColor(0));
+            notationButtons[button].setBorder(BorderFactory.createLineBorder(s.getColor(4),2));
+            notationButtons[button].setVerticalAlignment(JButton.CENTER);
+            notationButtons[button].setHorizontalAlignment(JButton.CENTER);
+            notationButtons[button].setFocusable(false);
+            notationButtons[button].setOpaque(true);
+            notationButtons[button].setBounds(0,0,30,30);
+            notationButtons[button].setForeground(s.getColor(4));
+            numberButtons[button].add(notationButtons[button]);
         }
     }
 
-    public void notationButtonListener(ActionEvent e) {
-        int currentIndex = 0;
-        for (int i = 0; i < 9; i++) {
-            if (e.getSource() == notationButtons[i]) {
-                currentIndex = i;
+    //this method is the listener for the number notation buttons
+    private void notationButtonListener(ActionEvent e) {
+        int numberPressed = 0;
+        for (int number = 0; number < 9; number++) {
+            if (e.getSource() == notationButtons[number]) {
+                numberPressed = number + 1;
                 break;
             }
         }
-        playingField.setNotationLayerNumber(currentIndex + 1);
+        playingField.setNotationLayerNumber(numberPressed);
     }
 
-    public void notationDeleteButtonListener(ActionEvent e) {
-        playingField.deletAllNotesInSelectedCell();
+    //this method is the listener for the button that deletes all notes
+    private void notationDeleteButtonListener(ActionEvent e) {
+        playingField.deleteAllNotesInSelectedCell();
     }
 
+    //public method to mark a notation button as active
     public void setNotationMarked(int number) {
         notationButtons[number].setBackground(s.getColor(3));
     }
 
+    //public method to mark a notation button as inactive
     public void setNotationUnmarked(int number) {
         notationButtons[number].setBackground(s.getColor(0));
     }

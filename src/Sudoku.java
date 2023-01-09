@@ -2,31 +2,33 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+
+//This clas implements the frame used for the sudoku game
 public class Sudoku extends JFrame {
 
     public static int NOBUTTON = 100;
     public static String FONT = "MV Boli";
     private boolean muted = false;
-    private int displayWidth = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
-    private int displayHeight = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
-    private PlayingField playingField;
-    private NumberField numberField;
-    private MyKeyListener mkl;
-    private JButton muteButton = new JButton();
-    private JButton menuWin = new JButton();
-    private JButton loosingScreen = new JButton();
-    private JLabel winningScreen = new JLabel();
-    private JLayeredPane background = new JLayeredPane();
-    private Color[] colors; //0:background1, 1:own numbers, 2:background2, 3:selectedField, 4:grid and fixed numbers
-    private int theme;
-    private Difficulty difficulty; //0 = easy, 1 = medium, 2 = hard
+    private final int displayWidth = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
+    private final int displayHeight = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
+    private final PlayingField playingField;
+    private final NumberField numberField;
+    private final MyKeyListener mkl;
+    private final JButton muteButton = new JButton();
+    private final JButton menuWin = new JButton();
+    private final JButton loosingScreen = new JButton();
+    private final JLabel winningScreen = new JLabel();
+    private final JLayeredPane background = new JLayeredPane();
+    private final Color[] colors; //0:background1, 1:own numbers, 2:background2, 3:selectedField, 4:grid and fixed numbers
+    private final int theme;
+    private final Difficulty difficulty; //0 = easy, 1 = medium, 2 = hard
     Sudoku(Difficulty difficulty, Color[] colors, int prevX, int prevY, int prevWidth, int prevHeight, int theme) {
         this.colors = colors;
         this.difficulty = difficulty;
         this.theme = theme;
         this.playingField = new PlayingField(this);
         this.numberField = new NumberField(this);
-        this.mkl = new MyKeyListener(playingField, numberField);
+        this.mkl = new MyKeyListener(playingField);
 
 
         setFrame(prevWidth, prevHeight, prevX, prevY);
@@ -40,6 +42,8 @@ public class Sudoku extends JFrame {
 
     //GUI setup functions
     /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+    //sets up the Sudoku frame
     private void setFrame(int prevWidth, int prevHeight, int prevX, int prevY) {
         //Frame settings
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -94,7 +98,7 @@ public class Sudoku extends JFrame {
         muteButton.setRolloverIcon(new ImageIcon("images\\Theme " + theme + "\\Sound.png"));
         muteButton.setPressedIcon(new ImageIcon("images\\Theme " + theme + "\\Mute.png"));
         muteButton.setBorderPainted(false);
-        muteButton.setBounds(playingField.getX() + playingField.getWidth() + 30, playingField.getY() + playingField.getButtonSize()/2 - muteButton.getIcon().getIconHeight()/2, muteButton.getIcon().getIconWidth(), muteButton.getIcon().getIconHeight());
+        muteButton.setBounds(playingField.getX() + playingField.getWidth() + 30, playingField.getY() + playingField.getCellSize()/2 - muteButton.getIcon().getIconHeight()/2, muteButton.getIcon().getIconWidth(), muteButton.getIcon().getIconHeight());
         muteButton.addActionListener(this::muteButtonListener);
     }
 

@@ -1,20 +1,21 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseListener;
 import java.util.Vector;
 
+
+//Panel that represents the playing field with all its cells
 public class PlayingField extends JPanel {
     /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-    private Sudoku s;
+    private final Sudoku s;
     private NumberField numberField;
-    private JPanel[] blocks = new JPanel[9];
-    private JButton[] buttons = new JButton[9 * 9];
-    private JLabel[] notationLayer = new JLabel[81 * 9];
+    private final JPanel[] blocks = new JPanel[9];
+    private final JButton[] buttons = new JButton[9 * 9];
+    private final JLabel[] notationLayer = new JLabel[81 * 9];
     private int[] gridBlocks;
     private int[] gridRows;
     private int[] gridColumns;
-    private Vector<Integer> counterVec = new Vector<>();
+    private final Vector<Integer> counterVec = new Vector<>();
     private int selectedCell = Sudoku.NOBUTTON;
 
     PlayingField(Sudoku s) {
@@ -31,6 +32,8 @@ public class PlayingField extends JPanel {
 
     //Functions used for initial setup
     /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+    //this method is sets up the playing field with all its buttons and generates a Sudoku based on the chosen difficulty
     public void setup(int width, int height, NumberField numberField, Difficulty difficulty) {
         this.numberField = numberField;
 
@@ -40,10 +43,6 @@ public class PlayingField extends JPanel {
         gridRows = sGen.getGridRows();
         gridColumns = sGen.getGridColumns();
 
-        gridBlocks[0] = 0;
-        gridRows[0] = 0;
-        gridColumns[0] = 0;
-
         //setup this panel
         setSize((height*75)/100, (height*75)/100);
         setBounds(width/2 - getWidth()/2,30,getWidth(), getHeight());
@@ -51,12 +50,13 @@ public class PlayingField extends JPanel {
         setBorder(BorderFactory.createLineBorder(s.getColor(4),4));
         setBackground(s.getColor(4));
 
+        //setup all the buttons
         setBlocks();
         setButtons();
         setNotationLayer();
     }
 
-    //setups the block panels
+    //sets up the block panels
     private void setBlocks() {
         for (int i = 0; i < blocks.length; ++i) {
             blocks[i] = new JPanel();
@@ -66,42 +66,43 @@ public class PlayingField extends JPanel {
         }
     }
 
-    //setups all cell buttons based on the playing fields start configuration
+    //sets up all cell buttons based on the playing fields start configuration
     private void setButtons() {
-        for (int i = 0; i < 9; ++i) {
-            for (int j = 0; j < 9; ++j) {
+        for (int block = 0; block < 9; ++block) {
+            for (int walker = 0; walker < 9; ++walker) {
                 //basic button configuration
-                buttons[i * 9 + j] = new JButton();
-                buttons[i * 9 + j].addActionListener(this::playButtons);
-                buttons[i * 9 + j].setFont(new Font(Sudoku.FONT, Font.PLAIN, 50));
-                buttons[i * 9 + j].setFocusable(false);
-                buttons[i * 9 + j].setBackground(i % 2 == 0 ? s.getColor(0) : s.getColor(2));
-                buttons[i * 9 + j].setForeground(s.getColor(1));
-                buttons[i * 9 + j].setBorder(BorderFactory.createLineBorder(s.getColor(4), 1));
-                buttons[i * 9 + j].setLayout(new GridLayout(3, 3));
-                blocks[i].add(buttons[i * 9 + j]);
+                buttons[block * 9 + walker] = new JButton();
+                buttons[block * 9 + walker].addActionListener(this::playButtons);
+                buttons[block * 9 + walker].setFont(new Font(Sudoku.FONT, Font.PLAIN, 50));
+                buttons[block * 9 + walker].setFocusable(false);
+                buttons[block * 9 + walker].setBackground(block % 2 == 0 ? s.getColor(0) : s.getColor(2));
+                buttons[block * 9 + walker].setBorder(BorderFactory.createLineBorder(s.getColor(4), 1));
+                buttons[block * 9 + walker].setLayout(new GridLayout(3, 3));
+                blocks[block].add(buttons[block * 9 + walker]);
 
                 //set the buttons that contain a number in the start configuration
-                if(gridBlocks[i * 9 + j] != 0) {
-                    buttons[i * 9 + j].setText("" + gridBlocks[i * 9 + j]);
-                    buttons[i * 9 + j].setRolloverEnabled(false);
-                    buttons[i * 9 + j].setForeground(s.getColor(4));
-                    counterVec.add(i * 9 + j);
+                if(gridBlocks[block * 9 + walker] != 0) {
+                    buttons[block * 9 + walker].setText("" + gridBlocks[block * 9 + walker]);
+                    buttons[block * 9 + walker].setRolloverEnabled(false);
+                    buttons[block * 9 + walker].setForeground(s.getColor(4));
+                    counterVec.add(block * 9 + walker);
+                } else {
+                    buttons[block * 9 + walker].setForeground(s.getColor(1));
                 }
             }
         }
     }
 
-    //setups all notationLayer labels
+    //sets up all notationLayer labels
     private void setNotationLayer() {
-        for (int i = 0; i < 81; i++) {
-            for (int j = 0; j < 9; j++) {
-                notationLayer[i * 9 + j] = new JLabel();
-                notationLayer[i * 9 + j].setFont(new Font(Sudoku.FONT, Font.BOLD, 20));
-                notationLayer[i * 9 + j].setForeground(s.getColor(1));
-                notationLayer[i * 9 + j].setVerticalAlignment(JLabel.CENTER);
-                notationLayer[i * 9 + j].setHorizontalAlignment(JLabel.CENTER);
-                buttons[i].add(notationLayer[i * 9 + j]);
+        for (int cell = 0; cell < 81; cell++) {
+            for (int number = 0; number < 9; number++) {
+                notationLayer[cell * 9 + number] = new JLabel();
+                notationLayer[cell * 9 + number].setFont(new Font(Sudoku.FONT, Font.BOLD, 20));
+                notationLayer[cell * 9 + number].setForeground(s.getColor(1));
+                notationLayer[cell * 9 + number].setVerticalAlignment(JLabel.CENTER);
+                notationLayer[cell * 9 + number].setHorizontalAlignment(JLabel.CENTER);
+                buttons[cell].add(notationLayer[cell * 9 + number]);
             }
         }
     }
@@ -109,18 +110,20 @@ public class PlayingField extends JPanel {
 
     //Action Listeners for Buttons
     /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+    //Action listener for the buttons of the cells
     private void playButtons(ActionEvent e) {
         //Searches for index of the button that was pressed
-        int currentIndex = 0;
-        for (int i = 0; i < 81; i++) {
-            if (e.getSource() == buttons[i]) {
-                currentIndex = i;
+        int currentCell = 0;
+        for (int cell = 0; cell < 81; cell++) {
+            if (e.getSource() == buttons[cell]) {
+                currentCell = cell;
                 break;
             }
         }
 
         //do nothing if cell is already selected
-        if(currentIndex == selectedCell) {
+        if(currentCell == selectedCell) {
             return;
         }
 
@@ -136,26 +139,26 @@ public class PlayingField extends JPanel {
         }
 
         //We set the color of the newly selected cell and update selectedCell variable
-        selectedCell = currentIndex;
-        buttons[currentIndex].setBackground(s.getColor(3));
-        for (int i = 0; i < 9; i++) {
-            if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
-                numberField.setNotationMarked(i);
+        selectedCell = currentCell;
+        buttons[currentCell].setBackground(s.getColor(3));
+        for (int number = 0; number < 9; number++) {
+            if (!notationLayer[selectedCell * 9 + number].getText().equals("")) {
+                numberField.setNotationMarked(number);
             }
         }
         s.repaint();
     }
 
 
-    //public Interface functions
+    //public interface functions
     /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-    //inserts Number at selected Field
+
+    //inserts number at selected cell
     public void setButtonNumber(int number) {
         //check if there is a cell currently selected
         if(selectedCell != Sudoku.NOBUTTON && !buttons[selectedCell].getForeground().equals(s.getColor(4))) {
             int row = Sudoku.getRow(selectedCell);
             int column = Sudoku.getColumn(selectedCell);
-            int block = selectedCell/9;
 
             //if the button was empty previously we need to add the cell to the counterVec
             if(buttons[selectedCell].getText().equals("")) {
@@ -175,6 +178,7 @@ public class PlayingField extends JPanel {
             }
 
             //delete all notes base on the number inserted
+            //currently removed this feature because it made the game a bit to easy
             /*for(int i = 0; i < 9; i++) {
                 notationLayer[block * 81 + i * 9 + number - 1].setText("");
                 notationLayer[((row / 3) * 27 + (row % 3) * 3 + (i / 3) * 9 + (i % 3)) * 9 + number - 1].setText("");
@@ -183,39 +187,42 @@ public class PlayingField extends JPanel {
 
             s.repaint();
 
-            //if the counterVec size gets to 81 that means the sudoku if filled completely and we need to check if
+            //if the counterVec size gets to 81 that means the sudoku if filled completely, and we need to check if
             if(counterVec.size() == 81) {
                 s.checkIfWon();
             }
         }
     }
 
+    //this method deletes from the selected cell
     public void deleteNumberFromSelectedCell() {
         //check if there is a cell currently selected and if the there is a number inside
-        if(selectedCell != Sudoku.NOBUTTON && !buttons[selectedCell].getForeground().equals(s.getColor(4))) {
-            if (!buttons[selectedCell].getText().equals("")) {
+        if(selectedCell != Sudoku.NOBUTTON
+                && !buttons[selectedCell].getForeground().equals(s.getColor(4))
+                && !buttons[selectedCell].getText().equals(""))
+        {
 
-                //remove this cell from the counterVec and update all grids and the button
-                counterVec.remove(Integer.valueOf(selectedCell));
-                int row = Sudoku.getRow(selectedCell);
-                int column = Sudoku.getColumn(selectedCell);
-                gridRows[row * 9 + column] = 0;
-                gridColumns[column * 9 + row] = 0;
-                gridBlocks[selectedCell] = 0;
-                buttons[selectedCell].setText("");
+            //remove this cell from the counterVec and update all grids and the button
+            counterVec.remove(Integer.valueOf(selectedCell));
+            int row = Sudoku.getRow(selectedCell);
+            int column = Sudoku.getColumn(selectedCell);
+            gridRows[row * 9 + column] = 0;
+            gridColumns[column * 9 + row] = 0;
+            gridBlocks[selectedCell] = 0;
+            buttons[selectedCell].setText("");
 
-                //set old notation visible and change color
-                for (int i = 0; i < 9; i++) {
-                    notationLayer[selectedCell * 9 + i].setVisible(true);
-                    if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
-                        numberField.setNotationMarked(i);
-                    }
+            //set old notation visible and change color
+            for (int i = 0; i < 9; i++) {
+                notationLayer[selectedCell * 9 + i].setVisible(true);
+                if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
+                    numberField.setNotationMarked(i);
                 }
-                s.repaint();
             }
+            s.repaint();
         }
     }
 
+    //sets the number of the notation layer in the selected cell
     public void setNotationLayerNumber(int number) {
         //check if there is a cell currently selected
         if(selectedCell != Sudoku.NOBUTTON && buttons[selectedCell].getText().equals("")) {
@@ -231,7 +238,8 @@ public class PlayingField extends JPanel {
         }
     }
 
-    public void deletAllNotesInSelectedCell() {
+    //deletes all notations in the selected cell
+    public void deleteAllNotesInSelectedCell() {
         //check if there is a cell currently selected
         if (selectedCell != Sudoku.NOBUTTON && buttons[selectedCell].getText().equals("")) {
             for(int i = 0; i < 9; i++) {
@@ -241,24 +249,31 @@ public class PlayingField extends JPanel {
         }
     }
 
+    //moves the selected cell by x and y in the grid (used for the key listener to move selected cell with arrow keys)
     public void moveSelectedCell(int x, int y) {
+        //check if there is a cell selected
         if(selectedCell != Sudoku.NOBUTTON) {
+
+            //block is the block of the old cell to put the right background color and row and column is the new field
             int block = selectedCell/9;
-            int row = Sudoku.getRow(selectedCell);
-            int column = Sudoku.getColumn(selectedCell);
-            row = row + y;
-            column = column + x;
+            int row = Sudoku.getRow(selectedCell) + y;
+            int column = Sudoku.getColumn(selectedCell) + x;
+
+            //check if our move is still inside the grid
             if(0 <= row && row <= 8 && 0 <= column && column <= 8) {
+                //set the background color of the old selected cell and unmark all the notation buttons
                 buttons[selectedCell].setBackground(block%2 == 0 ? s.getColor(0) : s.getColor(2));
                 for (int i = 0; i < 9; i++) {
                     numberField.setNotationUnmarked(i);
                 }
+
+                //change selected cell to the new cell and mark the notation buttons
                 int rowIndex = row * 9 + column;
-                selectedCell = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
+                selectedCell = Sudoku.getBlockIndexFromRow(rowIndex);
                 buttons[selectedCell].setBackground(s.getColor(3));
-                for (int i = 0; i < 9; i++) {
-                    if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
-                        numberField.setNotationMarked(i);
+                for (int number = 0; number < 9; number++) {
+                    if (!notationLayer[selectedCell * 9 + number].getText().equals("")) {
+                        numberField.setNotationMarked(number);
                     }
                 }
                 s.repaint();
@@ -266,80 +281,8 @@ public class PlayingField extends JPanel {
         }
     }
 
-    public void moveLeft() {
-
-    }
-
-    public void moveUp() {
-        if(selectedCell != Sudoku.NOBUTTON) {
-            int block = selectedCell/9;
-            int row = Sudoku.getRow(selectedCell);
-            int column = Sudoku.getColumn(selectedCell);
-            if(column > 0) {
-                buttons[selectedCell].setBackground(block%2 == 0 ? s.getColor(0) : s.getColor(2));
-                for (int i = 0; i < 9; i++) {
-                    numberField.setNotationUnmarked(i);
-                }
-                int rowIndex = row * 9 + column - 1;
-                selectedCell = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
-                buttons[selectedCell].setBackground(s.getColor(3));
-                for (int i = 0; i < 9; i++) {
-                    if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
-                        numberField.setNotationMarked(i);
-                    }
-                }
-                s.repaint();
-            }
-        }
-    }
-
-    public void moveRight() {
-        if(selectedCell != Sudoku.NOBUTTON) {
-            int block = selectedCell/9;
-            int row = Sudoku.getRow(selectedCell);
-            int column = Sudoku.getColumn(selectedCell);
-            if(column > 0) {
-                buttons[selectedCell].setBackground(block%2 == 0 ? s.getColor(0) : s.getColor(2));
-                for (int i = 0; i < 9; i++) {
-                    numberField.setNotationUnmarked(i);
-                }
-                int rowIndex = row * 9 + column - 1;
-                selectedCell = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
-                buttons[selectedCell].setBackground(s.getColor(3));
-                for (int i = 0; i < 9; i++) {
-                    if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
-                        numberField.setNotationMarked(i);
-                    }
-                }
-                s.repaint();
-            }
-        }
-    }
-
-    public void moveDown() {
-        if(selectedCell != Sudoku.NOBUTTON) {
-            int block = selectedCell/9;
-            int row = Sudoku.getRow(selectedCell);
-            int column = Sudoku.getColumn(selectedCell);
-            if(column > 0) {
-                buttons[selectedCell].setBackground(block%2 == 0 ? s.getColor(0) : s.getColor(2));
-                for (int i = 0; i < 9; i++) {
-                    numberField.setNotationUnmarked(i);
-                }
-                int rowIndex = row * 9 + column - 1;
-                selectedCell = ((rowIndex / 3) % 3) * 9 + ((rowIndex % 27) / 9) * 3 + (rowIndex / 27) * 27 + (rowIndex %3);
-                buttons[selectedCell].setBackground(s.getColor(3));
-                for (int i = 0; i < 9; i++) {
-                    if (!notationLayer[selectedCell * 9 + i].getText().equals("")) {
-                        numberField.setNotationMarked(i);
-                    }
-                }
-                s.repaint();
-            }
-        }
-    }
-
-    public int getButtonSize() {
+    //returns the size of the cells
+    public int getCellSize() {
         return getWidth() / 9;
     }
 }

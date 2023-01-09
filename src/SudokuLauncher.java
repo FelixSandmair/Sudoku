@@ -1,50 +1,49 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowEvent;
 
+
+//This class implements the frame of the launcher
 public class SudokuLauncher extends JFrame {
 
-    public static int YOffset = 30;
-    public static int XOffset = 50;
-    public static int NEWGAMEY = 450;
-    public static int NEWGAMEX = 35;
+    private static final int YOffset = 30;
+    private static final int XOffset = 50;
+    private static final int NEWGAMEY = 450;
+    private static final int NEWGAMEX = 35;
+    private static final int width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
+    private static final int height = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
 
-    Color[][] colors = {{new Color(0xffffff), new Color(0xbe1622), new Color(0x999999), new Color(0x575756), new Color(0x1d1d1b)}
+    //different color themes
+    private Color[][] colors = {{new Color(0xffffff), new Color(0xbe1622), new Color(0x999999), new Color(0x575756), new Color(0x1d1d1b)}
             ,{new Color(0xfeeee0), new Color(0xcfb7a3), new Color(0xb39378), new Color(0x9c6e4a), new Color(0x644229)}
             ,{new Color(0xf1e5ed), new Color(0xe2b8d7), new Color(0xc695c3), new Color(0x936aab), new Color(0x4e3c5a)}
             ,{new Color(0xe7d1c4), new Color(0xf0855c), new Color(0xbf938f), new Color(0x655772), new Color(0x322942)}
             ,{new Color(0xe3ecec), new Color(0x9dcef1), new Color(0x94acb7), new Color(0x1e6a6f), new Color(0x1e4a58)}};
-    int theme = 1;
-    JButton start = new JButton();
-    JButton newGame = new JButton();
-    JButton easy = new JButton();
-    JButton medium = new JButton();
-    JButton hard = new JButton();
-    JButton colorTheme = new JButton();
-    JButton quit = new JButton();
-    JButton[] colorThemeChooser = new JButton[5];
-    JLabel sudokuTitleScreen = new JLabel();
-    JLabel sudokuLogoLauncher = new JLabel();
-    JLabel backgroundLauncher = new JLabel();
-    JLabel sudokuIllustration = new JLabel();
-    JLabel logoLabel = new JLabel();
-    JLayeredPane background = new JLayeredPane();
-    SudokuLauncher() {
-        int width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
-        int height = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
+    private int theme = 1;
+    private final JButton start = new JButton();
+    private final JButton newGame = new JButton();
+    private final JButton easy = new JButton();
+    private final JButton medium = new JButton();
+    private final JButton hard = new JButton();
+    private final JButton colorTheme = new JButton();
+    private final JButton quit = new JButton();
+    private final JButton[] colorThemeChooser = new JButton[5];
+    private final JLabel sudokuTitleScreen = new JLabel();
+    private final JLabel sudokuLogoLauncher = new JLabel();
+    private final JLabel backgroundLauncher = new JLabel();
+    private final JLabel sudokuIllustration = new JLabel();
+    private final JLabel logoLabel = new JLabel();
+    private final JLayeredPane background = new JLayeredPane();
 
+    //standard game launcher
+    SudokuLauncher() {
         setLocation(width/2 - 750, height/2 - 530);
 
         setTitleScreen();
     }
 
-    //used for menu buttons to go back to menuVVVJHK
-
+    //used for menu buttons to go back to menu
     SudokuLauncher(int prevX, int prevY) {
-        int width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
-        int height = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
-
         setLocation(prevX, prevY);
 
         setTitleScreen();
@@ -52,6 +51,7 @@ public class SudokuLauncher extends JFrame {
         startListener(new ActionEvent(hard, 1, ""));
     }
 
+    //sets up the title screen
     public void setTitleScreen() {
         //setup this frame
         setLayout(null);
@@ -89,6 +89,8 @@ public class SudokuLauncher extends JFrame {
         setVisible(true);
     }
 
+
+    //sets up all the difficulty buttons
     public void setDifficultyButtons() {
 
         //easy button settings
@@ -128,7 +130,6 @@ public class SudokuLauncher extends JFrame {
     }
 
     public void setColorThemeChooser() {
-
         for(int i = 1; i <= 5; i++) {
             colorThemeChooser[i-1] = new JButton();
             colorThemeChooser[i-1].setIcon(new ImageIcon("images\\Theme " + theme + "\\Theme #" + i + ".png"));
